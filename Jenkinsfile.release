@@ -1,0 +1,149 @@
+// https://support.cloudbees.com/hc/en-us/articles/222838288-SSH-Credentials-Management-with-Jenkins
+// Require Credentials - Microsoft Azure Service Principal
+
+// gpg --verify jenkins-war-1.651.1.war.asc jenkins-war-1.651.1.war
+// gpg -a --export-secret-keys test-jenkins-release -o gpg-test-jenkins-release.asc
+
+pipeline {
+    agent {
+      kubernetes {
+        label 'jenkins-release'
+        defaultContainer 'jnlp'
+        yaml """
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    some-label: jenkins-release
+spec:
+  containers:
+  - name: maven
+    image: maven:3-jdk-8
+    command:
+    - cat
+    tty: true
+  - name: azure-cli
+    image: microsoft/azure-cli:2.0.41
+    command:
+    - cat
+    tty: true
+"""
+      }
+    }
+
+    options {
+      buildDiscarder logRotator(
+        artifactDaysToKeepStr: '',
+        artifactNumToKeepStr: '',
+        daysToKeepStr: '',
+        numToKeepStr: '10'
+      )
+    }
+
+    environment {
+      AZURE_STORAGE_ACCOUNT         = 'overninjenkinsreleases'
+      AZURE_STORAGE_CONTAINER_NAME  = 'gpg'
+      GPG_FILE                      = 'gpg-test-jenkins-release.asc'
+      GPG_KEYNAME                   = 'test-jenkins-release'
+      GPG_PASSPHRASE                = ''
+      SIGN_ALIAS                    = 'jenkins'
+      SIGN_KEYSTORE                 = "${ env.WORKSPACE + 'jenkins.pfx' }"
+    }
+
+    stages {
+      stage('Clean Release') {
+        steps {
+          container('maven') {
+            sh 'mvn release:clean'
+          }
+        }
+      }
+      stage('Retrieve Signing Certificate') {
+        environment {
+          AZURE_VAULT_NAME   = 'overnin'
+          AZURE_VAULT_CERT   = 'sandbox'
+          AZURE_VAULT_FILE   = 'jenkins.pem'
+        }
+
+        steps {
+          container('azure-cli') {
+            // Download pem certificate
+            withCredentials([
+              azureServicePrincipal('cloudbees-sandbox'),
+              string(credentialsId: 'signing-cert-pass', variable: 'SIGN_STOREPASS')]) {
+              // Log on Azure
+              sh 'az login --service-principal \
+                -u $AZURE_CLIENT_ID \
+                -p $AZURE_CLIENT_SECRET \
+                -t $AZURE_TENANT_ID'
+              // Download Certificate from Azure KeyVault
+              sh 'az keyvault secret download \
+                --vault-name $AZURE_VAULT_NAME \
+                --name sandbox \
+                --file $AZURE_VAULT_FILE'
+              // Convert private/public key to a pkcs12 keystore
+              sh 'openssl pkcs12 \
+                -export \
+                -out $SIGN_KEYSTORE \
+                -in $AZURE_VAULT_FILE \
+                -password pass:$SIGN_STOREPASS \
+                -name $SIGN_ALIAS'
+              //stash includes: env.AZURE_VAULT_FILE, name: 'certificate'
+            }
+          }
+        }
+      }
+      stage('Retrieve Signing GPG key') {
+        steps {
+          container('azure-cli') {
+            withCredentials([string(credentialsId: 'gpg-storage-account-key', variable: 'AZURE_STORAGE_KEY')]) {
+              sh 'az storage blob download \
+                --container-name $AZURE_STORAGE_CONTAINER_NAME \
+                --name $GPG_FILE \
+                --file $GPG_FILE'
+              //stash includes: env.GPG_FILE, name: 'gpg'
+            }
+          }
+        }
+      }
+      stage('Build Release') {
+        steps {
+          container('maven') {
+            // Maven required git push permission on https://github.com/jenkinsci/jenkins
+            sshagent(['release-key']) {
+              // Maven Release require following credentials
+              //  * gpg key password
+              //  * certificate key password
+              withCredentials([string(credentialsId: 'signing-cert-pass', variable: 'SIGN_STOREPASS')]) {
+                sh 'gpg --import $GPG_FILE'
+                sh 'mvn -B -DtagNameFormat="version" -DskipTests -Prelease release:prepare'
+              }
+            }
+          }
+        }
+      }
+      stage('Perform Release') {
+        steps {
+          container('maven') {
+              // Maven Release require following credentials
+              //  * gpg key password
+              //  * certificate key password
+            sshagent(['release-key']) {
+              sh 'mvn -Prelease release:perform'
+            }
+          }
+        }
+      }
+      // Validate that .war file is correctly signed
+    }
+    post {
+//        always {
+//            cleanWs()
+//        }
+        failure {
+            input """Pipeline failed.
+We will keep the build pod around to help you diagnose any failures.
+Select Proceed or Abort to terminate the build pod"""
+        }
+    }
+}
