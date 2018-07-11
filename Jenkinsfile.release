@@ -47,7 +47,7 @@ spec:
       GPG_KEYNAME                   = 'test-jenkins-release'
       GPG_PASSPHRASE                = ''
       SIGN_ALIAS                    = 'jenkins'
-      SIGN_KEYSTORE                 = "${ env.WORKSPACE + 'jenkins.pfx' }"
+      SIGN_KEYSTORE                 = "${ env.WORKSPACE + '/jenkins.pfx' }"
     }
 
     stages {
