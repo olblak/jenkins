@@ -680,6 +680,16 @@ THE SOFTWARE.
     </profile>
     <profile>
       <id>release</id>
+      <properties>
+        <hudson.sign.alias>${env.SIGN_ALIAS}</hudson.sign.alias>
+        <hudson.sign.keystore>${env.SIGN_KEYSTORE}</hudson.sign.keystore>
+        <hudson.sign.storepass>${env.SIGN_STOREPASS}</hudson.sign.storepass>
+        <jarsigner.keypass>${env.SIGN_STOREPASS}</jarsigner.keypass>
+        <jarsigner.storepass>${env.SIGN_STOREPASS}</jarsigner.storepass>
+        <gpg.keyname>${env.GPG_KEYNAME}</gpg.keyname>
+        <gpg.passphrase>${env.GPG_PASSPHRASE}</gpg.passphrase>
+      </properties>
+
       <build>
         <plugins>
           <plugin>
