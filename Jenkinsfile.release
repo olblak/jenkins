@@ -63,14 +63,13 @@ spec:
           AZURE_VAULT_NAME   = 'overnin'
           AZURE_VAULT_CERT   = 'sandbox'
           AZURE_VAULT_FILE   = 'jenkins.pem'
+          SIGN_STOREPASS     = credentials('signing-cert-pass')
         }
 
         steps {
           container('azure-cli') {
             // Download pem certificate
-            withCredentials([
-              azureServicePrincipal('cloudbees-sandbox'),
-              string(credentialsId: 'signing-cert-pass', variable: 'SIGN_STOREPASS')]) {
+            withCredentials([ azureServicePrincipal('cloudbees-sandbox' )]) {
               // Log on Azure
               sh 'az login --service-principal \
                 -u $AZURE_CLIENT_ID \
@@ -88,25 +87,28 @@ spec:
                 -in $AZURE_VAULT_FILE \
                 -password pass:$SIGN_STOREPASS \
                 -name $SIGN_ALIAS'
-              //stash includes: env.AZURE_VAULT_FILE, name: 'certificate'
             }
           }
         }
       }
       stage('Retrieve Signing GPG key') {
+        environment {
+          AZURE_STORAGE_KEY = credentials('gpg-storage-account-key')
+        }
+
         steps {
           container('azure-cli') {
-            withCredentials([string(credentialsId: 'gpg-storage-account-key', variable: 'AZURE_STORAGE_KEY')]) {
-              sh 'az storage blob download \
-                --container-name $AZURE_STORAGE_CONTAINER_NAME \
-                --name $GPG_FILE \
-                --file $GPG_FILE'
-              //stash includes: env.GPG_FILE, name: 'gpg'
-            }
+            sh 'az storage blob download \
+              --container-name $AZURE_STORAGE_CONTAINER_NAME \
+              --name $GPG_FILE \
+              --file $GPG_FILE'
           }
         }
       }
       stage('Build Release') {
+        environment {
+          SIGN_STOREPASS = credentials('signing-cert-pass')
+        }
         steps {
           container('maven') {
             // Maven required git push permission on https://github.com/jenkinsci/jenkins
@@ -114,10 +116,9 @@ spec:
               // Maven Release require following credentials
               //  * gpg key password
               //  * certificate key password
-              withCredentials([string(credentialsId: 'signing-cert-pass', variable: 'SIGN_STOREPASS')]) {
-                sh 'gpg --import $GPG_FILE'
-                sh 'mvn -B -DtagNameFormat="version" -DskipTests -Prelease release:prepare'
-              }
+              sh 'gpg --import $GPG_FILE'
+              sh 'mvn -B -DtagNameFormat="version" -DskipTests=true -Prelease release:prepare'
+              sh 'mvn -DskipTests=true install'
             }
           }
         }
@@ -131,6 +132,21 @@ spec:
             sshagent(['release-key']) {
               sh 'mvn -Prelease release:perform'
             }
+          }
+        }
+      }
+      stage('Publish Release Candidate') {
+        environment {
+          AZURE_STORAGE_KEY = credentials('release-account-key')
+        }
+        steps {
+          container('azure-cli') {
+            sh 'az storage container upload \
+              --acount-name overninjenkinsrelease \
+              --share-name war-rc \
+              --path $VERSION/jenkins.war \
+              --timeout 30 \
+              --source $WORKSPACE/war/target/jenkins.war'
           }
         }
       }
