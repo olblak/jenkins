@@ -48,6 +48,7 @@ spec:
       GPG_PASSPHRASE                = ''
       SIGN_ALIAS                    = 'jenkins'
       SIGN_KEYSTORE                 = "${ env.WORKSPACE + '/jenkins.pfx' }"
+      MAVEN_OPTS                    = '-XX:MaxPermSize=128m'
     }
 
     stages {
@@ -105,7 +106,7 @@ spec:
           }
         }
       }
-      stage('Build Release') {
+      stage('Prepare The Release') {
         environment {
           SIGN_STOREPASS = credentials('signing-cert-pass')
         }
@@ -117,13 +118,12 @@ spec:
               //  * gpg key password
               //  * certificate key password
               sh 'gpg --import $GPG_FILE'
-              sh 'mvn -B -DtagNameFormat="version" -DskipTests=true -Prelease release:prepare'
-              sh 'mvn -DskipTests=true install'
+              sh 'mvn -B -DtagNameFormat="version" -Dskip-test-harness -Prelease release:prepare'
             }
           }
         }
       }
-      stage('Perform Release') {
+      stage('Perform The Release') {
         steps {
           container('maven') {
               // Maven Release require following credentials
