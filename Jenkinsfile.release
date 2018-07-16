@@ -118,7 +118,7 @@ spec:
               //  * gpg key password
               //  * certificate key password
               sh 'gpg --import $GPG_FILE'
-              sh 'mvn -B -DtagNameFormat="version" -Dskip-test-harness -Prelease release:prepare'
+              sh 'mvn -B -DtagNameFormat="version" -Dskip-test-harness -DskipTests -Prelease release:prepare'
             }
           }
         }
