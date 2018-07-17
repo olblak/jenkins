@@ -1,5 +1,5 @@
-// https://support.cloudbees.com/hc/en-us/articles/222838288-SSH-Credentials-Management-with-Jenkins
-// Require Credentials - Microsoft Azure Service Principal
+// https://support.cloudbees.com/hc/en-us/articles/222838288-ssh-credentials-management-with-jenkins
+// require credentials - microsoft azure service principal
 
 // gpg --verify jenkins-war-1.651.1.war.asc jenkins-war-1.651.1.war
 // gpg -a --export-secret-keys test-jenkins-release -o gpg-test-jenkins-release.asc
@@ -48,7 +48,6 @@ spec:
       GPG_PASSPHRASE                = ''
       SIGN_ALIAS                    = 'jenkins'
       SIGN_KEYSTORE                 = "${ env.WORKSPACE + '/jenkins.pfx' }"
-      MAVEN_OPTS                    = '-XX:MaxPermSize=128m'
     }
 
     stages {
