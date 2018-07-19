@@ -6,6 +6,16 @@
 
 // MAven docker image cannot be run as root user
 // https://batmat.net/2017/01/30/do-not-run-your-tests-in-continuous-integration-with-the-root-user/
+// Docker container related to jenkins-jnlp require:
+// * uid 10000,
+// * gid 10000
+// * /home/jenkins/.jenkins
+
+// Jenkins Plugins:
+// * Azure-Credentials
+// * SSH-agent
+
+// /home/jenkins/.jenkins root permission
 
 pipeline {
     agent {
@@ -23,6 +33,7 @@ spec:
   - name: maven
     image: olblak/maven:3-jdk-8
     imagePullPolicy: Always
+    workdir: /home/jenkins
     env:
       - name: HOME
         value: "/home/jenkins/workspace"
@@ -31,6 +42,7 @@ spec:
     tty: true
   - name: azure-cli
     image: microsoft/azure-cli:2.0.41
+    workdir: /home/jenkins
     command:
     - cat
     tty: true
@@ -50,6 +62,8 @@ spec:
     environment {
       AZURE_STORAGE_ACCOUNT         = 'overninjenkinsreleases'
       AZURE_STORAGE_CONTAINER_NAME  = 'gpg'
+      GIT_EMAIL                     - 'jenkins-bot@olblak.com'
+      GIT_NAME                      = 'jenkins-bot'
       GPG_FILE                      = 'gpg-test-jenkins-release.asc'
       GPG_KEYNAME                   = 'test-jenkins-release'
       GPG_PASSPHRASE                = ''
@@ -124,6 +138,8 @@ spec:
               //  * gpg key password
               //  * certificate key password
               sh 'gpg --import $GPG_FILE'
+              sh 'git config --global user.email $GIT_EMAIL'
+              sh 'git config --global user.name $GIT_NAME'
               sh 'mvn -B -DtagNameFormat="version" -Dskip-test-harness -DskipTests -Prelease release:prepare'
             }
           }
