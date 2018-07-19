@@ -62,7 +62,7 @@ spec:
     environment {
       AZURE_STORAGE_ACCOUNT         = 'overninjenkinsreleases'
       AZURE_STORAGE_CONTAINER_NAME  = 'gpg'
-      GIT_EMAIL                     - 'jenkins-bot@olblak.com'
+      GIT_EMAIL                     = 'jenkins-bot@olblak.com'
       GIT_NAME                      = 'jenkins-bot'
       GPG_FILE                      = 'gpg-test-jenkins-release.asc'
       GPG_KEYNAME                   = 'test-jenkins-release'
