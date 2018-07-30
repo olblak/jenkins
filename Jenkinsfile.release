@@ -1,3 +1,4 @@
+// -*- Groovy -*-
 /*
   Require credentials:
     - Microsoft Azure Service Principal
