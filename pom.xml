@@ -68,6 +68,16 @@ THE SOFTWARE.
       <id>github-pages</id>
       <url>gitsite:git@github.com/jenkinsci/maven-site.git:core</url>
     </site>
+    <repository>
+        <id>olblak</id>
+        <name>jenkinsci-releases</name>
+        <url>https://repo.jenkins-ci.org/olblak-sandbox</url>
+    </repository>
+    <snapshotRepository>
+        <id>snapshots</id>
+        <name>jenkinsci-snapshots</name>
+        <url>https://repo.jenkins-ci.org/olblak-sandbox</url>
+    </snapshotRepository>
   </distributionManagement>
 
   <issueManagement>
@@ -680,20 +690,24 @@ THE SOFTWARE.
     </profile>
     <profile>
       <id>release</id>
-      <properties>
-        <hudson.sign.alias>${env.SIGN_ALIAS}</hudson.sign.alias>
-        <hudson.sign.keystore>${env.SIGN_KEYSTORE}</hudson.sign.keystore>
-        <hudson.sign.storepass>${env.SIGN_STOREPASS}</hudson.sign.storepass>
-        <jarsigner.keypass>${env.SIGN_STOREPASS}</jarsigner.keypass>
-        <jarsigner.storepass>${env.SIGN_STOREPASS}</jarsigner.storepass>
-        <gpg.keyname>${env.GPG_KEYNAME}</gpg.keyname>
-        <gpg.passphrase>${env.GPG_PASSPHRASE}</gpg.passphrase>
-        <connectionUrl>${env.GIT_REPOSITORY}</connectionUrl>
-        <scmCommentPrefix>${env.GIT_PREFIX_MESSAGE}</scmCommentPrefix>
-      </properties>
-
       <build>
         <plugins>
+          <plugin>
+            <artifactId>maven-release-plugin</artifactId>
+            <configuration>
+              <!-- enable release profile during the release, create IPS package, and sign bits. -->
+              <arguments>-P release,sign -DskipTests=true</arguments>
+              <!-- work around for a bug in javadoc plugin that causes the release to fail. see MRELEASE-271 -->
+              <preparationGoals>clean install</preparationGoals>
+              <goals>-DskipTests -Danimal.sniffer.skip=false javadoc:javadoc deploy</goals>
+              <pushChanges>false</pushChanges>
+              <localCheckout>true</localCheckout>
+              <tagNameFormat>jenkins-@{project.version}</tagNameFormat>
+              <connectionUrl>scm:git:git://github.com/olblak/jenkins.git</connectionUrl>
+              <stagingRepository>olblak::default::https://repo.jenkins-ci.org/olblak-sandbox/</stagingRepository>
+              <workingDirectory>stagingDir</workingDirectory>
+            </configuration>
+          </plugin>
           <plugin>
             <artifactId>maven-assembly-plugin</artifactId>
             <inherited>false</inherited>
@@ -723,6 +737,19 @@ THE SOFTWARE.
                 </goals>
               </execution>
             </executions>
+            <configuration>
+              <keyname>${env.GPG_KEYNAME}</keyname>
+              <passphrase>${env.GPG_PASSPHRASE}</passphrase>
+            </configuration>
+          </plugin>
+          <plugin>
+            <artifactId>maven-jarsigner-plugin</artifactId>
+            <configuration>
+              <keystore>${env.SIGN_KEYSTORE}</keystore>
+              <alias>${env.SIGN_ALIAS}</alias>
+              <storepass>${env.SIGN_STOREPASS}</storepass>
+              <keypass>${env.SIGN_STOREPASS}</keypass>
+            </configuration>
           </plugin>
         </plugins>
       </build>
