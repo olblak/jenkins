@@ -6,7 +6,8 @@
 WORKSPACE="/tmp"
 
 : "${MAVEN_PROFILE:=release}"
-: "${GIT_REPOSITORY:=https://github.com/olblak/jenkins}"
+: "${GIT_PREFIX_MESSAGE:=jenkins_bot}"
+: "${GIT_REPOSITORY:=git@github.com:olblak/jenkins.git}"
 : "${GIT_EMAIL:=jenkins-bot@example.com}"
 : "${GIT_NAME:=jenkins-bot}"
 : "${GPG_KEYNAME:=test-jenkins-release}"
