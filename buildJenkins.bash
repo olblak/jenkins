@@ -6,8 +6,7 @@
 WORKSPACE="/tmp"
 
 : "${MAVEN_PROFILE:=release}"
-: "${GIT_PREFIX_MESSAGE:=jenkins_bot}"
-: "${GIT_REPOSITORY:=git@github.com:olblak/jenkins.git}"
+: "${GIT_REPOSITORY:=scm:git:git@github.com:olblak/jenkins.git}"
 : "${GIT_EMAIL:=jenkins-bot@example.com}"
 : "${GIT_NAME:=jenkins-bot}"
 : "${GPG_KEYNAME:=test-jenkins-release}"
@@ -48,7 +47,7 @@ function makeRelease(){
   printf "\\n Prepare Jenkins Release\\n\\n"
   mvn -P"${MAVEN_PROFILE}" -B -DtagNameFormat release:prepare
   printf "\\n Perform Jenkins Release\\n\\n"
-  mvn -P"${MAVEN_PROFILE}" release:stage
+  mvn -P"${MAVEN_PROFILE}" release:perform
 }
 
 function validateKeystore(){

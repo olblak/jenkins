@@ -513,7 +513,7 @@ THE SOFTWARE.
           <!-- work around for a bug in javadoc plugin that causes the release to fail. see MRELEASE-271 -->
           <preparationGoals>clean install</preparationGoals>
           <goals>-DskipTests -Danimal.sniffer.skip=false javadoc:javadoc deploy</goals>
-          <pushChanges>false</pushChanges>
+          <pushChanges>true</pushChanges>
           <localCheckout>true</localCheckout>
           <tagNameFormat>jenkins-@{project.version}</tagNameFormat>
         </configuration>
@@ -674,7 +674,6 @@ THE SOFTWARE.
         <gpg.keyname>${env.GPG_KEYNAME}</gpg.keyname>
         <gpg.passphrase>${env.GPG_PASSPHRASE}</gpg.passphrase>
         <connectionUrl>${env.GIT_REPOSITORY}</connectionUrl>
-        <scmCommentPrefix>${env.GIT_PREFIX_MESSAGE}</scmCommentPrefix>
       </properties>
 
       <build>
