@@ -1,21 +1,37 @@
 #!/bin/bash
 
+set -e    # Abort script at first error
+set -u    # Attempt to use undefined variable outputs error message, and forces an exit
+
 # https://maven.apache.org/maven-release/maven-release-plugin/perform-mojo.html
+# mvn -Prelease help:active-profiles
 
 # Temporary
 WORKSPACE="/tmp"
 
 : "${MAVEN_PROFILE:=release}"
-: "${GIT_PREFIX_MESSAGE:=jenkins_bot}"
-: "${GIT_REPOSITORY:=git@github.com:olblak/jenkins.git}"
+: "${GIT_REPOSITORY:=scm:git:git://github.com/olblak/jenkins.git}"
 : "${GIT_EMAIL:=jenkins-bot@example.com}"
 : "${GIT_NAME:=jenkins-bot}"
 : "${GPG_KEYNAME:=test-jenkins-release}"
-: "${GPG_PASSPHRASE:=}"
-: "${SIGN_ALIAS:=}"
+: "${GPG_PASSPHRASE:?GPG Passphrase Required}" # Password must be the same for gpg agent and gpg key
+: "${SIGN_ALIAS:=jenkins}"
 : "${SIGN_KEYSTORE:=${WORKSPACE}/jenkins.pfx}"
-: "${SIGN_STOREPASS:=securepassword}"
+: "${SIGN_STOREPASS:=pass}"
 : "${SIGN_CERTIFICATE:=jenkins.pem}"
+: "${REPOSITORY_USERNAME:=olblak}"
+: "${REPOSITORY_PASSWORD:?Repository Password Missing}"
+
+export MAVEN_PROFILE
+export GIT_REPOSITORY
+export GIT_EMAIL
+export GIT_NAME
+export GPG_KEYNAME
+export GPG_PASSPHRASE
+export SIGN_ALIAS
+export SIGN_KEYSTORE
+export SIGN_STOREPASS
+export SIGN_CERTIFICATE
 
 function configureGPG(){ 
   if ! gpg --fingerprint "${GPG_KEYNAME}"; then
@@ -46,24 +62,59 @@ function configureKeystore(){
 
 function makeRelease(){
   printf "\\n Prepare Jenkins Release\\n\\n"
-  mvn -P"${MAVEN_PROFILE}" -B -DtagNameFormat release:prepare
+  mvn -P"${MAVEN_PROFILE}" -s settings-release.xml -B release:prepare
   printf "\\n Perform Jenkins Release\\n\\n"
-  mvn -P"${MAVEN_PROFILE}" release:stage
+  mvn -P"${MAVEN_PROFILE}" -s settings-release.xml -B release:stage
 }
 
 function validateKeystore(){
-  true
+  keytool -keystore "${SIGN_KEYSTORE}" -storepass "${SIGN_STOREPASS}" -list -alias "${SIGN_ALIAS}"
 }
 function validateGPG(){
   true
 }
 
-# Validate GPG access
-# Validate 
+function generateSettingsXml(){
+cat <<EOT> settings-release.xml
+<settings>
+  <servers>
+    <server>
+      <id>$REPOSITORY_USERNAME</id>
+      <username>$REPOSITORY_USERNAME</username>
+      <password>$REPOSITORY_PASSWORD</password>
+    </server>
+  </servers>
+</settings>
+EOT
 
-configureGPG
-configureKeystore
-configureGit
-validateKeystore
-validateGPG
-makeRelease
+}
+
+function main(){
+  if [ $# -eq 0 ] ;then
+    configureGPG
+    configureKeystore
+    configureGit
+    validateKeystore
+    validateGPG
+    generateSettingsXml
+    makeRelease
+  else
+    while [ $# -gt 0 ];
+    do
+      case "$1" in
+            --configureGPG) echo "ConfigureGPG" && configureGPG ;;
+            --configureKeystore) echo "Configure Keystore" && configureKeystore ;;
+            --configureGit) echo "Configure Git" configureGit ;;
+            --validateKeystore) echo "Validate Keystore"  && validateKeystore ;;
+            --validateGPG) echo "Validate GPG" && validateGPG ;;
+            --makeRelease) echo "Make Reldase" && generateSettingsXml && makeRelease ;;
+            -h) echo "help" ;;
+            -*) echo "help" ;;
+        esac
+        shift
+    done
+  fi
+}
+
+main "$@"
+
