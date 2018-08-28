@@ -688,6 +688,7 @@ THE SOFTWARE.
         <jarsigner.storepass>${env.SIGN_STOREPASS}</jarsigner.storepass>
         <gpg.keyname>${env.GPG_KEYNAME}</gpg.keyname>
         <gpg.passphrase>${env.GPG_PASSPHRASE}</gpg.passphrase>
+        <connectionUrl>${env.GIT_REPOSITORY}</connectionUrl>
       </properties>
 
       <build>
