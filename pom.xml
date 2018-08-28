@@ -688,6 +688,7 @@ THE SOFTWARE.
         <gpg.keyname>${env.GPG_KEYNAME}</gpg.keyname>
         <gpg.passphrase>${env.GPG_PASSPHRASE}</gpg.passphrase>
         <connectionUrl>${env.GIT_REPOSITORY}</connectionUrl>
+        <scmCommentPrefix>${env.GIT_PREFIX_MESSAGE}</scmCommentPrefix>
       </properties>
 
       <build>
