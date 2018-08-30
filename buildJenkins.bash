@@ -1,6 +1,10 @@
 #!/bin/bash
 
+set -e    # Abort script at first error
+set -u    # Attempt to use undefined variable outputs error message, and forces an exit
+
 # https://maven.apache.org/maven-release/maven-release-plugin/perform-mojo.html
+# mvn -Prelease help:active-profiles
 
 # Temporary
 WORKSPACE="/tmp"
@@ -13,8 +17,19 @@ WORKSPACE="/tmp"
 : "${GPG_PASSPHRASE:?GPG Passphrase Required}" # Password must be the same for gpg agent and gpg key
 : "${SIGN_ALIAS:=jenkins}"
 : "${SIGN_KEYSTORE:=${WORKSPACE}/jenkins.pfx}"
-: "${SIGN_STOREPASS:=securepassword}"
+: "${SIGN_STOREPASS:=pass}"
 : "${SIGN_CERTIFICATE:=jenkins.pem}"
+
+export MAVEN_PROFILE
+export GIT_REPOSITORY
+export GIT_EMAIL
+export GIT_NAME
+export GPG_KEYNAME
+export GPG_PASSPHRASE
+export SIGN_ALIAS
+export SIGN_KEYSTORE
+export SIGN_STOREPASS
+export SIGN_CERTIFICATE
 
 function configureGPG(){ 
   if ! gpg --fingerprint "${GPG_KEYNAME}"; then
@@ -45,13 +60,13 @@ function configureKeystore(){
 
 function makeRelease(){
   printf "\\n Prepare Jenkins Release\\n\\n"
-  mvn -P"${MAVEN_PROFILE}" -B -DtagNameFormat release:prepare
+  mvn -P"${MAVEN_PROFILE}" -B release:prepare
   printf "\\n Perform Jenkins Release\\n\\n"
-  mvn -P"${MAVEN_PROFILE}" release:perform
+  # mvn -P"${MAVEN_PROFILE}" -B release:perform
 }
 
 function validateKeystore(){
-  true
+  keytool -keystore "${SIGN_KEYSTORE}" -storepass "${SIGN_STOREPASS}" -list -alias "${SIGN_ALIAS}"
 }
 function validateGPG(){
   true

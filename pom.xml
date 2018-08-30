@@ -665,17 +665,21 @@ THE SOFTWARE.
     </profile>
     <profile>
       <id>release</id>
-      <properties>
-        <jarsigner.keypass>${env.SIGN_STOREPASS}</jarsigner.keypass>
-        <jarsigner.storepass>${env.SIGN_STOREPASS}</jarsigner.storepass>
-        <jarsigner.alias>${env.SIGN_ALIAS}</jarsigner.alias>
-        <gpg.keyname>${env.GPG_KEYNAME}</gpg.keyname>
-        <gpg.passphrase>${env.GPG_PASSPHRASE}</gpg.passphrase>
-        <connectionUrl>${env.GIT_REPOSITORY}</connectionUrl>
-      </properties>
-
       <build>
         <plugins>
+          <plugin>
+            <artifactId>maven-release-plugin</artifactId>
+            <configuration>
+              <!-- enable release profile during the release, create IPS package, and sign bits. -->
+              <arguments>-P release,sign</arguments>
+              <!-- work around for a bug in javadoc plugin that causes the release to fail. see MRELEASE-271 -->
+              <preparationGoals>clean install</preparationGoals>
+              <goals>-DskipTests -Danimal.sniffer.skip=false javadoc:javadoc deploy</goals>
+              <pushChanges>true</pushChanges>
+              <localCheckout>true</localCheckout>
+              <tagNameFormat>jenkins-@{project.version}</tagNameFormat>
+            </configuration>
+          </plugin>
           <plugin>
             <artifactId>maven-assembly-plugin</artifactId>
             <inherited>false</inherited>
@@ -696,15 +700,19 @@ THE SOFTWARE.
           </plugin>
           <plugin>
             <artifactId>maven-gpg-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>sign-artifacts</id>
-                <phase>verify</phase>
-                <goals>
-                  <goal>sign</goal>
-                </goals>
-              </execution>
-            </executions>
+            <configuration>
+              <keyname>${env.GPG_KEYNAME}</keyname>
+              <passphrase>${env.GPG_PASSPHRASE}</passphrase>
+            </configuration>
+          </plugin>
+          <plugin>
+            <artifactId>maven-jarsigner-plugin</artifactId>
+            <configuration>
+              <keystore>${env.SIGN_KEYSTORE}</keystore>
+              <alias>${env.SIGN_ALIAS}</alias>
+              <storepass>${env.SIGN_STOREPASS}</storepass>
+              <keypass>${env.SIGN_STOREPASS}</keypass>
+            </configuration>
           </plugin>
         </plugins>
       </build>
