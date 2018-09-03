@@ -156,6 +156,19 @@ spec:
           }
         }
       }
+      stage('Publish') {
+        steps {
+          container('maven') {
+            // Maven required git push permission on https://github.com/jenkinsci/jenkins
+            input 'Publish?'
+            sshagent(['release-key']) {
+              def pom = readMavenPom file: 'pom.xml'
+              def version = pom.version
+              sh 'git push jenkins-${version}'
+            }
+          }
+        }
+      }
       stage('Reincrementalify') {
         steps {
           container('maven') {
