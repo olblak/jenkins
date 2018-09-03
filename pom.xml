@@ -56,8 +56,8 @@ THE SOFTWARE.
   </modules>
 
   <scm>
-    <connection>scm:git:git://github.com/olblak/jenkins.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/olblak/jenkins.git</developerConnection>
+    <connection>scm:git:git://github.com/jenkins/jenkins.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/jenkins/jenkins.git</developerConnection>
     <url>https://github.com/olblak/jenkins</url>
     <tag>${scmTag}</tag>
   </scm>
@@ -675,9 +675,10 @@ THE SOFTWARE.
               <!-- work around for a bug in javadoc plugin that causes the release to fail. see MRELEASE-271 -->
               <preparationGoals>clean install</preparationGoals>
               <goals>-DskipTests -Danimal.sniffer.skip=false javadoc:javadoc deploy</goals>
-              <pushChanges>true</pushChanges>
+              <pushChanges>false</pushChanges>
               <localCheckout>true</localCheckout>
               <tagNameFormat>jenkins-@{project.version}</tagNameFormat>
+              <connectionUrl>${env.GIT_REPOSITORY}</connectionUrl>
             </configuration>
           </plugin>
           <plugin>
