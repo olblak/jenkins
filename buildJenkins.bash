@@ -62,7 +62,7 @@ function makeRelease(){
   printf "\\n Prepare Jenkins Release\\n\\n"
   mvn -P"${MAVEN_PROFILE}" -B release:prepare
   printf "\\n Perform Jenkins Release\\n\\n"
-  # mvn -P"${MAVEN_PROFILE}" -B release:perform
+  mvn -P"${MAVEN_PROFILE}" -B release:stage
 }
 
 function validateKeystore(){
