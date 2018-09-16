@@ -72,12 +72,32 @@ function validateGPG(){
   true
 }
 
-# Validate GPG access
-# Validate 
+function main(){
+  if [ $# -eq 0 ] ;then
+    exit "test"
+    configureGPG
+    configureKeystore
+    configureGit
+    validateKeystore
+    validateGPG
+    makeRelease
+  else
+    while [ $# -gt 0 ];
+    do
+      case "$1" in
+            --configureGPG) echo "ConfigureGPG" && configureGPG ;;
+            --configureKeystore) echo "Configure Keystore" && configureKeystore ;;
+            --configureGit) echo "Configure Git" configureGit ;;
+            --validateKeystore) echo "Validate Keystore"  && validateKeystore ;;
+            --validateGPG) echo "Validate GPG" && validateGPG ;;
+            --makeRelease) echo "Make Reldase" && makeRelease ;;
+            -c) echo "configure" ;;
+            -*) echo "help" ;;
+        esac
+        shift
+    done
+  fi
+}
 
-configureGPG
-configureKeystore
-configureGit
-validateKeystore
-validateGPG
-makeRelease
+main "$@"
+
