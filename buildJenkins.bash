@@ -74,7 +74,6 @@ function validateGPG(){
 
 function main(){
   if [ $# -eq 0 ] ;then
-    exit "test"
     configureGPG
     configureKeystore
     configureGit
@@ -91,7 +90,7 @@ function main(){
             --validateKeystore) echo "Validate Keystore"  && validateKeystore ;;
             --validateGPG) echo "Validate GPG" && validateGPG ;;
             --makeRelease) echo "Make Reldase" && makeRelease ;;
-            -c) echo "configure" ;;
+            -h) echo "help" ;;
             -*) echo "help" ;;
         esac
         shift
