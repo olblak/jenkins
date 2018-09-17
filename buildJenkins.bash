@@ -10,7 +10,7 @@ set -u    # Attempt to use undefined variable outputs error message, and forces 
 WORKSPACE="/tmp"
 
 : "${MAVEN_PROFILE:=release}"
-: "${GIT_REPOSITORY:=scm:git:git@github.com:olblak/jenkins.git}"
+: "${GIT_REPOSITORY:=scm:git:git://github.com/olblak/jenkins.git}"
 : "${GIT_EMAIL:=jenkins-bot@example.com}"
 : "${GIT_NAME:=jenkins-bot}"
 : "${GPG_KEYNAME:=test-jenkins-release}"
