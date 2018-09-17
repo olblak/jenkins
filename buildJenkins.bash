@@ -60,9 +60,9 @@ function configureKeystore(){
 
 function makeRelease(){
   printf "\\n Prepare Jenkins Release\\n\\n"
-  mvn -P"${MAVEN_PROFILE}" -Darguments="-DskipTests=true" -B release:prepare
+  mvn -P"${MAVEN_PROFILE}" -B release:prepare
   printf "\\n Perform Jenkins Release\\n\\n"
-  mvn -P"${MAVEN_PROFILE}" -Darguments="-DskipTests=true" -B release:stage
+  mvn -P"${MAVEN_PROFILE}" -B release:stage
 }
 
 function validateKeystore(){
