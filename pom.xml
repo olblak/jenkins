@@ -679,6 +679,8 @@ THE SOFTWARE.
               <localCheckout>true</localCheckout>
               <tagNameFormat>jenkins-@{project.version}</tagNameFormat>
               <connectionUrl>${env.GIT_REPOSITORY}</connectionUrl>
+              <stagingRepository>${env.GIT_REPOSITORY}</stagingRepository>
+              <workingDirectory>stagingDir</workingDirectory>
             </configuration>
           </plugin>
           <plugin>
