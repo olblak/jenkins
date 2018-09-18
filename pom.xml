@@ -67,6 +67,16 @@ THE SOFTWARE.
       <id>github-pages</id>
       <url>gitsite:git@github.com/jenkinsci/maven-site.git:core</url>
     </site>
+    <repository>
+        <id>olblak</id>
+        <name>jenkinsci-releases</name>
+        <url>https://repo.jenkins-ci.org/olblak-sandbox</url>
+    </repository>
+    <snapshotRepository>
+        <id>snapshots</id>
+        <name>jenkinsci-snapshots</name>
+        <url>https://repo.jenkins-ci.org/olblak-sandbox</url>
+    </snapshotRepository>
   </distributionManagement>
 
   <issueManagement>
@@ -679,7 +689,7 @@ THE SOFTWARE.
               <localCheckout>true</localCheckout>
               <tagNameFormat>jenkins-@{project.version}</tagNameFormat>
               <connectionUrl>scm:git:git://github.com/olblak/jenkins.git</connectionUrl>
-              <stagingRepository>scm:git:git://github.com/olblak/jenkins.git</stagingRepository>
+              <stagingRepository>olblak::default::https://repo.jenkins-ci.org/olblak-sandbox/</stagingRepository>
               <workingDirectory>stagingDir</workingDirectory>
             </configuration>
           </plugin>
