@@ -19,6 +19,8 @@ WORKSPACE="/tmp"
 : "${SIGN_KEYSTORE:=${WORKSPACE}/jenkins.pfx}"
 : "${SIGN_STOREPASS:=pass}"
 : "${SIGN_CERTIFICATE:=jenkins.pem}"
+: "${REPOSITORY_USERNAME:=olblak}"
+: "${REPOSITORY_PASSWORD:?Repository Password Missing}"
 
 export MAVEN_PROFILE
 export GIT_REPOSITORY
@@ -60,9 +62,9 @@ function configureKeystore(){
 
 function makeRelease(){
   printf "\\n Prepare Jenkins Release\\n\\n"
-  mvn -P"${MAVEN_PROFILE}" -s settings-olblak.xml -B release:prepare
+  mvn -P"${MAVEN_PROFILE}" -s settings-release.xml -B release:prepare
   printf "\\n Perform Jenkins Release\\n\\n"
-  mvn -P"${MAVEN_PROFILE}" -s settings-olblak.xml -B release:stage
+  mvn -P"${MAVEN_PROFILE}" -s settings-release.xml -B release:stage
 }
 
 function validateKeystore(){
@@ -72,6 +74,21 @@ function validateGPG(){
   true
 }
 
+function generateSettingsXml(){
+cat <<EOT> settings-release.xml
+<settings>
+  <servers>
+    <server>
+      <id>$REPOSITORY_USERNAME</id>
+      <username>$REPOSITORY_USERNAME</username>
+      <password>$REPOSITORY_PASSWORD</password>
+    </server>
+  </servers>
+</settings>
+EOT
+
+}
+
 function main(){
   if [ $# -eq 0 ] ;then
     configureGPG
@@ -79,6 +96,7 @@ function main(){
     configureGit
     validateKeystore
     validateGPG
+    generateSettingsXml
     makeRelease
   else
     while [ $# -gt 0 ];
@@ -89,7 +107,7 @@ function main(){
             --configureGit) echo "Configure Git" configureGit ;;
             --validateKeystore) echo "Validate Keystore"  && validateKeystore ;;
             --validateGPG) echo "Validate GPG" && validateGPG ;;
-            --makeRelease) echo "Make Reldase" && makeRelease ;;
+            --makeRelease) echo "Make Reldase" && generateSettingsXml && makeRelease ;;
             -h) echo "help" ;;
             -*) echo "help" ;;
         esac
