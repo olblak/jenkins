@@ -713,6 +713,15 @@ THE SOFTWARE.
           </plugin>
           <plugin>
             <artifactId>maven-gpg-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
             <configuration>
               <keyname>${env.GPG_KEYNAME}</keyname>
               <passphrase>${env.GPG_PASSPHRASE}</passphrase>
