@@ -28,10 +28,17 @@ export GIT_EMAIL
 export GIT_NAME
 export GPG_KEYNAME
 export GPG_PASSPHRASE
+export REPOSITORY_USERNAME
+export REPOSITORY_PASSWORD
 export SIGN_ALIAS
 export SIGN_KEYSTORE
 export SIGN_STOREPASS
 export SIGN_CERTIFICATE
+
+function configureGit(){
+  git config --local user.email "${GIT_EMAIL}"
+  git config --local user.name "${GIT_NAME}"
+}
 
 function configureGPG(){ 
   if ! gpg --fingerprint "${GPG_KEYNAME}"; then
@@ -43,10 +50,6 @@ function configureGPG(){
   fi
 }
 
-function configureGit(){
-  git config --local user.email "${GIT_EMAIL}"
-  git config --local user.name "${GIT_NAME}"
-}
 
 function configureKeystore(){
   if [ ! -f ${SIGN_CERTIFICATE} ]; then
@@ -58,20 +61,6 @@ function configureKeystore(){
       -password pass:$SIGN_STOREPASS \
       -name $SIGN_ALIAS
   fi
-}
-
-function makeRelease(){
-  printf "\\n Prepare Jenkins Release\\n\\n"
-  mvn -P"${MAVEN_PROFILE}" -s settings-release.xml -B release:prepare
-  printf "\\n Perform Jenkins Release\\n\\n"
-  mvn -P"${MAVEN_PROFILE}" -s settings-release.xml -B release:stage
-}
-
-function validateKeystore(){
-  keytool -keystore "${SIGN_KEYSTORE}" -storepass "${SIGN_STOREPASS}" -list -alias "${SIGN_ALIAS}"
-}
-function validateGPG(){
-  true
 }
 
 function generateSettingsXml(){
@@ -86,7 +75,24 @@ cat <<EOT> settings-release.xml
   </servers>
 </settings>
 EOT
+}
 
+
+function prepareRelease(){
+  printf "\\n Prepare Jenkins Release\\n\\n"
+  mvn -P"${MAVEN_PROFILE}" -s settings-release.xml -B release:prepare
+}
+
+function stageRelease(){
+  printf "\\n Perform Jenkins Release\\n\\n"
+  mvn -P"${MAVEN_PROFILE}" -s settings-release.xml -B release:stage
+}
+
+function validateKeystore(){
+  keytool -keystore "${SIGN_KEYSTORE}" -storepass "${SIGN_STOREPASS}" -list -alias "${SIGN_ALIAS}"
+}
+function validateGPG(){
+  true
 }
 
 function main(){
@@ -97,7 +103,8 @@ function main(){
     validateKeystore
     validateGPG
     generateSettingsXml
-    makeRelease
+    prepareRelease
+    stageRelease
   else
     while [ $# -gt 0 ];
     do
@@ -107,7 +114,8 @@ function main(){
             --configureGit) echo "Configure Git" configureGit ;;
             --validateKeystore) echo "Validate Keystore"  && validateKeystore ;;
             --validateGPG) echo "Validate GPG" && validateGPG ;;
-            --makeRelease) echo "Make Reldase" && generateSettingsXml && makeRelease ;;
+            --prepareRelease) echo "Prepare Release" && generateSettingsXml && prepareRelease ;;
+            --stageRelease) echo "Stage Release" && stageRelease ;;
             -h) echo "help" ;;
             -*) echo "help" ;;
         esac
@@ -117,4 +125,3 @@ function main(){
 }
 
 main "$@"
-
