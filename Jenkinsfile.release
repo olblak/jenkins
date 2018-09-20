@@ -105,12 +105,7 @@ spec:
                 --name sandbox \
                 --file $AZURE_VAULT_FILE'
               // Convert private/public key to a pkcs12 keystore
-              sh 'openssl pkcs12 \
-                -export \
-                -out $SIGN_KEYSTORE \
-                -in $AZURE_VAULT_FILE \
-                -password pass:$SIGN_STOREPASS \
-                -name $SIGN_ALIAS'
+              sh 'scripts/buildJenkins.bash --configureKeystore'
             }
           }
         }
@@ -129,34 +124,34 @@ spec:
           }
         }
       }
-      stage('Prepare The Release') {
+      stage('Prepare Release') {
         environment {
           SIGN_STOREPASS = credentials('signing-cert-pass')
+          REPOSITORY_PASSWORD = credentials('maven-repository-password')
         }
         steps {
           container('maven') {
             // Maven required git push permission on https://github.com/jenkinsci/jenkins
             sshagent(['release-key']) {
               // Maven Release requires gpg key with password password and a certificate key with password
-              sh 'gpg --import $GPG_FILE'
-              sh 'git config --global user.email $GIT_EMAIL'
-              sh 'git config --global user.name $GIT_NAME'
-              sh 'mvn -B -DtagNameFormat="version" -Prelease release:prepare'
+              sh 'scripts/buildJenkins.bash --configureGPG'
+              sh 'scripts/buildJenkins.bash --configureGit'
+              sh 'scripts/buildJenkins.bash --prepareRelease'
             }
           }
         }
       }
-      stage('Perform The Release') {
+      stage('Stage Release') {
         steps {
           container('maven') {
             // Maven required git push permission on https://github.com/jenkinsci/jenkins
             sshagent(['release-key']) {
-              sh 'mvn -Prelease release:perform'
+              sh 'scripts/buildJenkins.bash --stageRelease'
             }
           }
         }
       }
-      stage('Publish') {
+      stage('Commit Release') {
         steps {
           container('maven') {
             // Maven required git push permission on https://github.com/jenkinsci/jenkins
@@ -180,7 +175,7 @@ spec:
           }
         }
       }
-      stage('Publish Release Candidate') {
+      stage('Publish Jenkins Package') {
         environment {
           AZURE_STORAGE_KEY = credentials('release-account-key')
           JENKINS_WAR = "${ env.WORKSPACE + '/war/target/jenkins.war'}"
