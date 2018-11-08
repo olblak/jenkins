@@ -157,9 +157,11 @@ spec:
             // Maven required git push permission on https://github.com/jenkinsci/jenkins
             input 'Publish?'
             sshagent(['release-key']) {
-              def pom = readMavenPom file: 'pom.xml'
-              def version = pom.version
-              sh 'git push jenkins-${version}'
+              script {
+                def pom = readMavenPom file: 'pom.xml'
+                def version = pom.version
+                sh 'git push jenkins-${version}'
+              }
             }
           }
         }
