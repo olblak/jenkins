@@ -63,7 +63,7 @@ spec:
     }
 
     environment {
-      AZURE_STORAGE_ACCOUNT         = 'overninjenkinsreleases'
+      AZURE_STORAGE_ACCOUNT         = 'overninjenkinsreleasekey'
       AZURE_STORAGE_CONTAINER_NAME  = 'gpg'
       GIT_EMAIL                     = 'jenkins-bot@example.com'
       GIT_NAME                      = 'jenkins-bot'
@@ -179,7 +179,7 @@ spec:
       }
       stage('Publish Jenkins Package') {
         environment {
-          AZURE_STORAGE_KEY = credentials('release-account-key')
+          AZURE_STORAGE_KEY = credentials('release-storage-account-key')
           JENKINS_WAR = "${ env.WORKSPACE + '/war/target/jenkins.war'}"
           JENKINS_ASC = "${ env.WORKSPACE + '/war/target/jenkins.asc'}"
           AZURE_SHARE_NAME = "war-rc"
