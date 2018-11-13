@@ -157,8 +157,8 @@ spec:
             sshagent(['release-key']) {
               script {
                 def pom = readMavenPom file: 'pom.xml'
-                def version = pom.version
-                sh 'git push jenkins-${version}'
+                def version = pom.getVersion()
+                sh "git push jenkins-${version}"
               }
             }
           }
