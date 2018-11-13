@@ -38,6 +38,8 @@ export SIGN_CERTIFICATE
 function configureGit(){
   git config --local user.email "${GIT_EMAIL}"
   git config --local user.name "${GIT_NAME}"
+  git config --get user.name
+  git config --get user.email
 }
 
 function configureGPG(){ 
@@ -45,7 +47,8 @@ function configureGPG(){
     if [ ! -f "${GPG_FILE}" ]; then
       exit "${GPG_KEYNAME} or ${GPG_FILE} cannot be found"
     else
-      gpg --import "${GPG_FILE}"
+      ## --pinenty-mode is needed to avoid gpg prompt during maven release
+      gpg --import --batch "${GPG_FILE}"
     fi
   fi
 }
