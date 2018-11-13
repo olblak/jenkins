@@ -69,7 +69,7 @@ spec:
       GIT_NAME                      = 'jenkins-bot'
       GPG_FILE                      = 'gpg-test-jenkins-release.asc'
       GPG_KEYNAME                   = 'test-jenkins-release'
-      GPG_PASSPHRASE                = ''
+      GPG_PASSPHRASE                = credentials('release-gpg-passphrase')
       SIGN_ALIAS                    = 'jenkins'
       SIGN_KEYSTORE                 = "${ env.WORKSPACE + '/jenkins.pfx' }"
     }
@@ -94,6 +94,7 @@ spec:
           container('azure-cli') {
             // Download pem certificate
             withCredentials([ azureServicePrincipal('cloudbees-sandbox' )]) {
+            //withCredentials([ azureServicePrincipal('release-service-principal' )]) {
               // Log on Azure
               sh 'az login --service-principal \
                 -u $AZURE_CLIENT_ID \
