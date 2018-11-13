@@ -63,15 +63,15 @@ spec:
     }
 
     environment {
-      AZURE_STORAGE_ACCOUNT         = 'overninjenkinsreleasekey'
-      AZURE_STORAGE_CONTAINER_NAME  = 'gpg'
       GIT_EMAIL                     = 'jenkins-bot@example.com'
       GIT_NAME                      = 'jenkins-bot'
       GPG_FILE                      = 'gpg-test-jenkins-release.asc'
       GPG_KEYNAME                   = 'test-jenkins-release'
       GPG_PASSPHRASE                = credentials('release-gpg-passphrase')
+      REPOSITORY_PASSWORD           = credentials('maven-repository-password')
       SIGN_ALIAS                    = 'jenkins'
       SIGN_KEYSTORE                 = "${ env.WORKSPACE + '/jenkins.pfx' }"
+      SIGN_STOREPASS                = credentials('signing-cert-pass')
     }
 
     stages {
@@ -87,7 +87,6 @@ spec:
           AZURE_VAULT_NAME   = 'overnin'
           AZURE_VAULT_CERT   = 'sandbox'
           AZURE_VAULT_FILE   = 'jenkins.pem'
-          SIGN_STOREPASS     = credentials('signing-cert-pass')
         }
 
         steps {
@@ -113,7 +112,9 @@ spec:
       }
       stage('Retrieve Signing GPG key') {
         environment {
-          AZURE_STORAGE_KEY = credentials('gpg-storage-account-key')
+          AZURE_STORAGE_ACCOUNT         = 'overninjenkinsreleasekey'
+          AZURE_STORAGE_CONTAINER_NAME  = 'gpg'
+          AZURE_STORAGE_KEY             = credentials('gpg-storage-account-key')
         }
 
         steps {
@@ -126,10 +127,6 @@ spec:
         }
       }
       stage('Prepare Release') {
-        environment {
-          SIGN_STOREPASS = credentials('signing-cert-pass')
-          REPOSITORY_PASSWORD = credentials('maven-repository-password')
-        }
         steps {
           container('maven') {
             // Maven required git push permission on https://github.com/jenkinsci/jenkins
@@ -180,6 +177,7 @@ spec:
       }
       stage('Publish Jenkins Package') {
         environment {
+          AZURE_STORAGE_ACCOUNT = 'overninjenkinsreleases'
           AZURE_STORAGE_KEY = credentials('release-storage-account-key')
           JENKINS_WAR = "${ env.WORKSPACE + '/war/target/jenkins.war'}"
           JENKINS_ASC = "${ env.WORKSPACE + '/war/target/jenkins.asc'}"
