@@ -114,7 +114,7 @@ function main(){
       case "$1" in
             --configureGPG) echo "ConfigureGPG" && configureGPG ;;
             --configureKeystore) echo "Configure Keystore" && configureKeystore ;;
-            --configureGit) echo "Configure Git" configureGit ;;
+            --configureGit) echo "Configure Git" && configureGit ;;
             --validateKeystore) echo "Validate Keystore"  && validateKeystore ;;
             --validateGPG) echo "Validate GPG" && validateGPG ;;
             --prepareRelease) echo "Prepare Release" && generateSettingsXml && prepareRelease ;;
