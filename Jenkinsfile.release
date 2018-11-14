@@ -135,6 +135,10 @@ spec:
               sh 'scripts/buildJenkins.bash --configureGPG'
               sh 'scripts/buildJenkins.bash --configureGit'
               sh 'scripts/buildJenkins.bash --prepareRelease'
+              script {
+                def properties = readProperties file: 'release.properties'
+                env.RELEASE_SCM_TAG = properties['scm.tag']
+              }
             }
           }
         }
@@ -155,10 +159,9 @@ spec:
             // Maven required git push permission on https://github.com/jenkinsci/jenkins
             //input 'Publish?'
             sshagent(['release-key']) {
-              script {
-                def properties = readProperties file: 'release.properties'
-                sh "git push origin ${ properties['scm.tag'] }"
-              }
+              // By default git config url is set to https instead of ssh
+              sh 'sed -i \'s#url = https://github.com/#url = git@github.com:#\' .git/config'
+              sh 'git push origin $RELEASE_SCM_TAG'
             }
           }
         }
@@ -170,6 +173,7 @@ spec:
             sshagent(['release-key']) {
               sh 'mvn io.jenkins.tools.incrementals:incrementals-maven-plugin:reincrementalify'
               sh 'git commit -m "mvn incrementals:reincrementalify" pom.xml "*/pom.xml"'
+              // Git push but which tag?
             }
           }
         }
