@@ -156,14 +156,8 @@ spec:
             //input 'Publish?'
             sshagent(['release-key']) {
               script {
-                //t/* 
-                //def pom = readMavenPom file: 'pom.xml'
-                //def version = pom.version
-                //sh "git push jenkins-${version}"
-                //*/
-                def properties = readProperties file: release.properties
-                sh "echo ${properties}"
-                sh "git push properties.scm.tag"
+                def properties = readProperties file: 'release.properties'
+                sh "git push origin ${ properties['scm.tag'] }"
               }
             }
           }
