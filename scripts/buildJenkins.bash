@@ -38,8 +38,6 @@ export SIGN_CERTIFICATE
 function configureGit(){
   git config --local user.email "${GIT_EMAIL}"
   git config --local user.name "${GIT_NAME}"
-  git config --get user.name
-  git config --get user.email
 }
 
 function configureGPG(){ 
