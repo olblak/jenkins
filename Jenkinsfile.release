@@ -85,29 +85,28 @@ spec:
       }
       stage('Retrieve Signing Certificate') {
         environment {
-          AZURE_VAULT_NAME   = 'overnin'
-          AZURE_VAULT_CERT   = 'sandbox'
-          AZURE_VAULT_FILE   = 'jenkins.pem'
+          AZURE_VAULT_NAME              = 'overnin'
+          AZURE_VAULT_CERT              = 'sandbox'
+          AZURE_VAULT_FILE              = 'jenkins.pem'
+          AZURE_VAULT_CLIENT_ID         = credentials('azure-vault-client-id')
+          AZURE_VAULT_CLIENT_SECRET     = credentials('azure-vault-client-secret')
+          AZURE_VAULT_TENANT_ID         = credentials('azure-vault-tenant-id')
         }
 
         steps {
           container('azure-cli') {
-            // Download pem certificate
-            withCredentials([ azureServicePrincipal('cloudbees-sandbox' )]) {
-            //withCredentials([ azureServicePrincipal('release-service-principal' )]) {
-              // Log on Azure
-              sh 'az login --service-principal \
-                -u $AZURE_CLIENT_ID \
-                -p $AZURE_CLIENT_SECRET \
-                -t $AZURE_TENANT_ID'
-              // Download Certificate from Azure KeyVault
-              sh 'az keyvault secret download \
-                --vault-name $AZURE_VAULT_NAME \
-                --name sandbox \
-                --file $AZURE_VAULT_FILE'
-              // Convert private/public key to a pkcs12 keystore
-              sh 'scripts/buildJenkins.bash --configureKeystore'
-            }
+            sh 'az login --service-principal \
+              -u $AZURE_VAULT_CLIENT_ID \
+              -p $AZURE_VAULT_CLIENT_SECRET \
+              -t $AZURE_VAULT_TENANT_ID'
+            // Download Certificate from Azure KeyVault
+            sh 'az keyvault secret download \
+              --vault-name $AZURE_VAULT_NAME \
+              --name sandbox \
+              --file $AZURE_VAULT_FILE'
+            // Convert private/public key to a pkcs12 keystore
+            sh 'scripts/buildJenkins.bash --configureKeystore'
+            sh 'az logout'
           }
         }
       }
