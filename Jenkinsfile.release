@@ -189,7 +189,7 @@ spec:
         steps {
           container('azure-cli') {
             sh "gpg --verify '${ env.JENKINS_ASC }' '${ env.JENKINS_WAR }'"
-            sh "unzip -qc '${ env.JENKINS_WAR }' META-INF/MANIFEST.MF | grep 'Jenkins-Version' | awk \'{print $2}\'"
+            sh "unzip -qc '${ env.JENKINS_WAR }' META-INF/MANIFEST.MF | grep 'Jenkins-Version' | awk \'{print \$2}\'"
             sh "az storage container upload \
               --acount-name '${ env.AZURE_STORAGE_ACCOUNT }' \
               --share-name '${ env.AZURE_SHARE_NAME }' \
