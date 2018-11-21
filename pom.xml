@@ -71,12 +71,12 @@ THE SOFTWARE.
     <repository>
         <id>olblak</id>
         <name>jenkinsci-releases</name>
-        <url>https://repo.jenkins-ci.org/olblak-sandbox</url>
+        <url>http://nexus/repository/maven-snapshots/</url>
     </repository>
     <snapshotRepository>
         <id>snapshots</id>
         <name>jenkinsci-snapshots</name>
-        <url>https://repo.jenkins-ci.org/olblak-sandbox</url>
+        <url>http://nexus/repository/maven-snapshots/</url>
     </snapshotRepository>
   </distributionManagement>
 
@@ -134,7 +134,7 @@ THE SOFTWARE.
   <repositories>
     <repository>
       <id>repo.jenkins-ci.org</id>
-      <url>https://repo.jenkins-ci.org/public/</url>
+      <url>http://nexus/repository/jenkins-public/</url>
       <!-- allow snapshots -->
     </repository>
   </repositories>
@@ -142,7 +142,7 @@ THE SOFTWARE.
   <pluginRepositories>
     <pluginRepository>
       <id>repo.jenkins-ci.org</id>
-      <url>https://repo.jenkins-ci.org/public/</url>
+      <url>http://nexus/repository/jenkins-public/</url>
     </pluginRepository>
   </pluginRepositories>
 
@@ -704,7 +704,7 @@ THE SOFTWARE.
               <localCheckout>true</localCheckout>
               <tagNameFormat>jenkins-@{project.version}</tagNameFormat>
               <connectionUrl>scm:git:git://github.com/olblak/jenkins.git</connectionUrl>
-              <stagingRepository>olblak::default::https://repo.jenkins-ci.org/olblak-sandbox/</stagingRepository>
+              <stagingRepository>olblak::default::http://nexus/repository/maven/</stagingRepository>
               <workingDirectory>stagingDir</workingDirectory>
             </configuration>
           </plugin>
