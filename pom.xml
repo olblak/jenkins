@@ -71,7 +71,7 @@ THE SOFTWARE.
     <repository>
         <id>olblak</id>
         <name>jenkinsci-releases</name>
-        <url>http://nexus/repository/maven-snapshots/</url>
+        <url>http://nexus/repository/maven-releases/</url>
     </repository>
     <snapshotRepository>
         <id>snapshots</id>
