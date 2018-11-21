@@ -69,7 +69,12 @@ cat <<EOT> settings-release.xml
 <settings>
   <servers>
     <server>
-      <id>$REPOSITORY_USERNAME</id>
+      <id>snapshots</id>
+      <username>$REPOSITORY_USERNAME</username>
+      <password>$REPOSITORY_PASSWORD</password>
+    </server>
+    <server>
+      <id>releases</id>
       <username>$REPOSITORY_USERNAME</username>
       <password>$REPOSITORY_PASSWORD</password>
     </server>
