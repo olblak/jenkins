@@ -69,7 +69,7 @@ THE SOFTWARE.
       <url>gitsite:git@github.com/jenkinsci/maven-site.git:core</url>
     </site>
     <repository>
-        <id>olblak</id>
+        <id>releases</id>
         <name>jenkinsci-releases</name>
         <url>http://nexus/repository/maven-releases/</url>
     </repository>
@@ -704,7 +704,7 @@ THE SOFTWARE.
               <localCheckout>true</localCheckout>
               <tagNameFormat>jenkins-@{project.version}</tagNameFormat>
               <connectionUrl>scm:git:git://github.com/olblak/jenkins.git</connectionUrl>
-              <stagingRepository>olblak::default::http://nexus/repository/maven/</stagingRepository>
+              <stagingRepository>releases::default::http://nexus/repository/maven-releases/</stagingRepository>
               <workingDirectory>stagingDir</workingDirectory>
             </configuration>
           </plugin>
