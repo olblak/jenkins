@@ -69,6 +69,7 @@ spec:
       GPG_FILE                      = 'gpg-test-jenkins-release.gpg'
       GPG_KEYNAME                   = 'sandbox-release-jenkins'
       GPG_PASSPHRASE                = credentials('release-gpg-passphrase')
+      REPOSITORY_USERNAME           = credentials('maven-repository-username')
       REPOSITORY_PASSWORD           = credentials('maven-repository-password')
       SIGN_ALIAS                    = 'jenkins'
       SIGN_KEYSTORE                 = "${ env.WORKSPACE + '/jenkins.pfx' }"
