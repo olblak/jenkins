@@ -96,22 +96,21 @@ spec:
 
         steps {
           container('azure-cli') {
+            // TODO move into a shell script in the repository
             sh '''
               az login --service-principal \
-              -u $AZURE_VAULT_CLIENT_ID \
-              -p $AZURE_VAULT_CLIENT_SECRET \
-              -t $AZURE_VAULT_TENANT_ID
-            '''
-            // Download Certificate from Azure KeyVault
-            sh '''
+                -u $AZURE_VAULT_CLIENT_ID \
+                -p $AZURE_VAULT_CLIENT_SECRET \
+                -t $AZURE_VAULT_TENANT_ID
+              # Download Certificate from Azure KeyVault
               az keyvault secret download \
-              --vault-name $AZURE_VAULT_NAME \
-              --name sandbox \
-              --file $AZURE_VAULT_FILE
+                --vault-name $AZURE_VAULT_NAME \
+                --name sandbox \
+                --file $AZURE_VAULT_FILE
+              # Convert private/public key to a pkcs12 keystore
+              scripts/buildJenkins.bash --configureKeystore
+              az logout
             '''
-            // Convert private/public key to a pkcs12 keystore
-            sh 'scripts/buildJenkins.bash --configureKeystore'
-            sh 'az logout'
           }
         }
       }
@@ -139,9 +138,11 @@ spec:
             // Maven required git push permission on https://github.com/jenkinsci/jenkins
             sshagent(['release-key']) {
               // Maven Release requires gpg key with password password and a certificate key with password
-              sh 'scripts/buildJenkins.bash --configureGPG'
-              sh 'scripts/buildJenkins.bash --configureGit'
-              sh 'scripts/buildJenkins.bash --prepareRelease'
+              sh '''
+                scripts/buildJenkins.bash --configureGPG
+                scripts/buildJenkins.bash --configureGit
+                scripts/buildJenkins.bash --prepareRelease
+              '''
               script {
                 def properties = readProperties file: 'release.properties'
                 env.RELEASE_SCM_TAG = properties['scm.tag']
@@ -167,8 +168,10 @@ spec:
             //input 'Publish?'
             sshagent(['release-key']) {
               // By default git config url is set to https instead of ssh
-              sh 'sed -i \'s#url = https://github.com/#url = git@github.com:#\' .git/config'
-              sh 'git push origin $RELEASE_SCM_TAG'
+              sh '''
+                sed -i 's#url = https://github.com/#url = git@github.com:#' .git/config
+                git push origin $RELEASE_SCM_TAG
+              '''
             }
           }
         }
@@ -178,8 +181,11 @@ spec:
           container('maven') {
             // Maven required git push permission on https://github.com/jenkinsci/jenkins
             sshagent(['release-key']) {
-              sh 'mvn io.jenkins.tools.incrementals:incrementals-maven-plugin:reincrementalify'
-              sh 'git commit -m "mvn incrementals:reincrementalify" pom.xml "*/pom.xml"'
+              // TODO delete on all modern LTS lines, we no longer need to manually incrementalify after release
+              sh '''
+                mvn io.jenkins.tools.incrementals:incrementals-maven-plugin:reincrementalify
+                git commit -m "mvn incrementals:reincrementalify" pom.xml "*/pom.xml"
+              '''
               // Git push but which tag?
             }
           }
@@ -195,17 +201,15 @@ spec:
         }
         steps {
           container('azure-cli') {
-            sh 'gpg --verify "$JENKINS_ASC" "$JENKINS_WAR"'
             sh '''
+              gpg --verify "$JENKINS_ASC" "$JENKINS_WAR"
               unzip -qc "$JENKINS_WAR" META-INF/MANIFEST.MF | grep 'Jenkins-Version' | awk '{print $2}'
-            '''
-            sh '''
               az storage container upload \
-              --acount-name $AZURE_STORAGE_ACCOUNT \
-              --share-name $AZURE_SHARE_NAME \
-              --path $VERSION/jenkins.war \
-              --timeout 30 \
-              --source "$JENKINS_WAR"
+                --acount-name $AZURE_STORAGE_ACCOUNT \
+                --share-name $AZURE_SHARE_NAME \
+                --path $VERSION/jenkins.war \
+                --timeout 30 \
+                --source "$JENKINS_WAR"
             '''
           }
         }
