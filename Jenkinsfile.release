@@ -25,7 +25,7 @@ pipeline {
       kubernetes {
         label 'jenkins-release'
         defaultContainer 'jnlp'
-        yaml """
+        yaml '''
 apiVersion: v1
 kind: Pod
 metadata:
@@ -49,7 +49,7 @@ spec:
     command:
     - cat
     tty: true
-"""
+'''
       }
     }
 
@@ -72,7 +72,7 @@ spec:
       REPOSITORY_USERNAME           = credentials('maven-repository-username')
       REPOSITORY_PASSWORD           = credentials('maven-repository-password')
       SIGN_ALIAS                    = 'jenkins'
-      SIGN_KEYSTORE                 = "${ env.WORKSPACE + '/jenkins.pfx' }"
+      SIGN_KEYSTORE                 = "$WORKSPACE/jenkins.pfx"
       SIGN_STOREPASS                = credentials('signing-cert-pass')
     }
 
@@ -96,15 +96,19 @@ spec:
 
         steps {
           container('azure-cli') {
-            sh "az login --service-principal \
-              -u '${ env.AZURE_VAULT_CLIENT_ID }' \
-              -p '${ env.AZURE_VAULT_CLIENT_SECRET }' \
-              -t '${ env.AZURE_VAULT_TENANT_ID }'"
+            sh '''
+              az login --service-principal \
+              -u $AZURE_VAULT_CLIENT_ID \
+              -p $AZURE_VAULT_CLIENT_SECRET \
+              -t $AZURE_VAULT_TENANT_ID
+            '''
             // Download Certificate from Azure KeyVault
-            sh "az keyvault secret download \
-              --vault-name '${ env.AZURE_VAULT_NAME}' \
+            sh '''
+              az keyvault secret download \
+              --vault-name $AZURE_VAULT_NAME \
               --name sandbox \
-              --file '${ env.AZURE_VAULT_FILE }'"
+              --file $AZURE_VAULT_FILE
+            '''
             // Convert private/public key to a pkcs12 keystore
             sh 'scripts/buildJenkins.bash --configureKeystore'
             sh 'az logout'
@@ -120,10 +124,12 @@ spec:
 
         steps {
           container('azure-cli') {
-            sh "az storage blob download \
-              --container-name '${ env.AZURE_STORAGE_CONTAINER_NAME }' \
-              --name '${ env.GPG_FILE }' \
-              --file '${ env.GPG_FILE }'"
+            sh '''
+              az storage blob download \
+              --container-name $AZURE_STORAGE_CONTAINER_NAME \
+              --name $GPG_FILE \
+              --file $GPG_FILE
+            '''
           }
         }
       }
@@ -162,7 +168,7 @@ spec:
             sshagent(['release-key']) {
               // By default git config url is set to https instead of ssh
               sh 'sed -i \'s#url = https://github.com/#url = git@github.com:#\' .git/config'
-              sh "git push origin '${ env.RELEASE_SCM_TAG }'"
+              sh 'git push origin $RELEASE_SCM_TAG'
             }
           }
         }
@@ -183,20 +189,24 @@ spec:
         environment {
           AZURE_STORAGE_ACCOUNT = 'overninjenkinsreleases'
           AZURE_STORAGE_KEY = credentials('release-storage-account-key')
-          JENKINS_WAR = "${ env.WORKSPACE + '/war/target/jenkins.war' }"
-          JENKINS_ASC = "${ env.WORKSPACE + '/war/target/jenkins.asc' }"
-          AZURE_SHARE_NAME = "war-rc"
+          JENKINS_WAR = "$WORKSPACE/war/target/jenkins.war"
+          JENKINS_ASC = "$WORKSPACE/war/target/jenkins.asc"
+          AZURE_SHARE_NAME = 'war-rc'
         }
         steps {
           container('azure-cli') {
-            sh "gpg --verify '${ env.JENKINS_ASC }' '${ env.JENKINS_WAR }'"
-            sh "unzip -qc '${ env.JENKINS_WAR }' META-INF/MANIFEST.MF | grep 'Jenkins-Version' | awk \'{print \$2}\'"
-            sh "az storage container upload \
-              --acount-name '${ env.AZURE_STORAGE_ACCOUNT }' \
-              --share-name '${ env.AZURE_SHARE_NAME }' \
-              --path '${ env.VERSION/jenkins.war }' \
+            sh 'gpg --verify "$JENKINS_ASC" "$JENKINS_WAR"'
+            sh '''
+              unzip -qc "$JENKINS_WAR" META-INF/MANIFEST.MF | grep 'Jenkins-Version' | awk '{print $2}'
+            '''
+            sh '''
+              az storage container upload \
+              --acount-name $AZURE_STORAGE_ACCOUNT \
+              --share-name $AZURE_SHARE_NAME \
+              --path $VERSION/jenkins.war \
               --timeout 30 \
-              --source '${ env.JENKINS_WAR }'"
+              --source "$JENKINS_WAR"
+            '''
           }
         }
       }
@@ -208,9 +218,9 @@ spec:
         }
     */
         failure {
-            input """Pipeline failed.
+            input '''Pipeline failed.
 We will keep the build pod around to help you diagnose any failures.
-Select Proceed or Abort to terminate the build pod"""
+Select Proceed or Abort to terminate the build pod'''
         }
     }
 }
