@@ -109,7 +109,6 @@ spec:
                 --file "$AZURE_VAULT_FILE"
               # Convert private/public key to a pkcs12 keystore
               scripts/buildJenkins.bash --configureKeystore
-              az logout
             '''
           }
         }
