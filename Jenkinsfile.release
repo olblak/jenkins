@@ -99,14 +99,14 @@ spec:
             // TODO move into a shell script in the repository
             sh '''
               az login --service-principal \
-                -u $AZURE_VAULT_CLIENT_ID \
-                -p $AZURE_VAULT_CLIENT_SECRET \
-                -t $AZURE_VAULT_TENANT_ID
+                -u "$AZURE_VAULT_CLIENT_ID" \
+                -p "$AZURE_VAULT_CLIENT_SECRET" \
+                -t "$AZURE_VAULT_TENANT_ID"
               # Download Certificate from Azure KeyVault
               az keyvault secret download \
-                --vault-name $AZURE_VAULT_NAME \
+                --vault-name "$AZURE_VAULT_NAME" \
                 --name sandbox \
-                --file $AZURE_VAULT_FILE
+                --file "$AZURE_VAULT_FILE"
               # Convert private/public key to a pkcs12 keystore
               scripts/buildJenkins.bash --configureKeystore
               az logout
@@ -126,8 +126,8 @@ spec:
             sh '''
               az storage blob download \
               --container-name $AZURE_STORAGE_CONTAINER_NAME \
-              --name $GPG_FILE \
-              --file $GPG_FILE
+              --name "$GPG_FILE" \
+              --file "$GPG_FILE"
             '''
           }
         }
@@ -170,7 +170,7 @@ spec:
               // By default git config url is set to https instead of ssh
               sh '''
                 sed -i 's#url = https://github.com/#url = git@github.com:#' .git/config
-                git push origin $RELEASE_SCM_TAG
+                git push origin "$RELEASE_SCM_TAG"
               '''
             }
           }
@@ -205,9 +205,9 @@ spec:
               gpg --verify "$JENKINS_ASC" "$JENKINS_WAR"
               unzip -qc "$JENKINS_WAR" META-INF/MANIFEST.MF | grep 'Jenkins-Version' | awk '{print $2}'
               az storage container upload \
-                --acount-name $AZURE_STORAGE_ACCOUNT \
-                --share-name $AZURE_SHARE_NAME \
-                --path $VERSION/jenkins.war \
+                --acount-name "$AZURE_STORAGE_ACCOUNT" \
+                --share-name "$AZURE_SHARE_NAME" \
+                --path "$VERSION/jenkins.war" \
                 --timeout 30 \
                 --source "$JENKINS_WAR"
             '''
