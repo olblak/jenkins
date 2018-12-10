@@ -125,6 +125,7 @@ spec:
           container('azure-cli') {
             sh '''
               az storage blob download \
+              --account-name $AZURE_STORAGE_ACCOUNT \
               --container-name $AZURE_STORAGE_CONTAINER_NAME \
               --name "$GPG_FILE" \
               --file "$GPG_FILE"
