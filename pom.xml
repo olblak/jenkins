@@ -133,7 +133,7 @@ THE SOFTWARE.
        *not* defined the specific details in the settings.xml file. -->
   <repositories>
     <repository>
-      <id>repo.jenkins-ci.org</id>
+      <id>jenkins-public</id>
       <url>http://nexus/repository/jenkins-public/</url>
       <!-- allow snapshots -->
     </repository>
@@ -141,7 +141,7 @@ THE SOFTWARE.
 
   <pluginRepositories>
     <pluginRepository>
-      <id>repo.jenkins-ci.org</id>
+      <id>jenkins-public</id>
       <url>http://nexus/repository/jenkins-public/</url>
     </pluginRepository>
   </pluginRepositories>
