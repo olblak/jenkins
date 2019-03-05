@@ -161,7 +161,7 @@ spec:
           }
         }
       }
-      stage('Commit Release') {
+      stage('Push Commits') {
         steps {
           container('maven') {
             // Maven required git push permission on https://github.com/jenkinsci/jenkins
@@ -170,23 +170,8 @@ spec:
               // By default git config url is set to https instead of ssh
               sh '''
                 sed -i 's#url = https://github.com/#url = git@github.com:#' .git/config
-                git push origin "$RELEASE_SCM_TAG"
+                git push origin HEAD:master "$RELEASE_SCM_TAG"
               '''
-            }
-          }
-        }
-      }
-      stage('Reincrementalify') {
-        steps {
-          container('maven') {
-            // Maven required git push permission on https://github.com/jenkinsci/jenkins
-            sshagent(['release-key']) {
-              // TODO delete on all modern LTS lines, we no longer need to manually incrementalify after release
-              sh '''
-                mvn io.jenkins.tools.incrementals:incrementals-maven-plugin:reincrementalify
-                git commit -m "mvn incrementals:reincrementalify" pom.xml "*/pom.xml"
-              '''
-              // Git push but which tag?
             }
           }
         }
