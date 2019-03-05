@@ -44,7 +44,7 @@ spec:
     - cat
     tty: true
   - name: azure-cli
-    image: microsoft/azure-cli:2.0.41
+    image: microsoft/azure-cli:2.0.59
     workdir: /home/jenkins
     command:
     - cat
