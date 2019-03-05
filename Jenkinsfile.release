@@ -67,7 +67,7 @@ spec:
       GIT_NAME                      = 'jenkins-bot'
       GIT_SSH_COMMAND               = 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
       GPG_FILE                      = 'gpg-test-jenkins-release.gpg'
-      GPG_KEYNAME                   = 'sandbox-release-jenkins'
+      GPG_KEYNAME                   = 'test-jenkins-release'
       GPG_PASSPHRASE                = credentials('release-gpg-passphrase')
       REPOSITORY_USERNAME           = credentials('maven-repository-username')
       REPOSITORY_PASSWORD           = credentials('maven-repository-password')
