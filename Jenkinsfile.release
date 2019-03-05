@@ -151,12 +151,12 @@ spec:
           }
         }
       }
-      stage('Stage Release') {
+      stage('Perform Release') {
         steps {
           container('maven') {
             // Maven required git push permission on https://github.com/jenkinsci/jenkins
             sshagent(['release-key']) {
-              sh 'scripts/buildJenkins.bash --stageRelease'
+              sh 'scripts/buildJenkins.bash --performRelease'
             }
           }
         }

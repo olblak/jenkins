@@ -98,9 +98,9 @@ function prepareRelease(){
   mvn -P"${MAVEN_PROFILE}" -s settings-release.xml -B release:prepare
 }
 
-function stageRelease(){
+function performRelease(){
   printf "\\n Perform Jenkins Release\\n\\n"
-  mvn -P"${MAVEN_PROFILE}" -s settings-release.xml -B release:stage
+  mvn -P"${MAVEN_PROFILE}" -s settings-release.xml -B release:perform
 }
 
 function validateKeystore(){
@@ -119,7 +119,7 @@ function main(){
     validateGPG
     generateSettingsXml
     prepareRelease
-    stageRelease
+    performRelease
   else
     while [ $# -gt 0 ];
     do
@@ -131,7 +131,7 @@ function main(){
             --validateKeystore) echo "Validate Keystore"  && validateKeystore ;;
             --validateGPG) echo "Validate GPG" && validateGPG ;;
             --prepareRelease) echo "Prepare Release" && generateSettingsXml && prepareRelease ;;
-            --stageRelease) echo "Stage Release" && stageRelease ;;
+            --performRelease) echo "Stage Release" && performRelease ;;
             -h) echo "help" ;;
             -*) echo "help" ;;
         esac
