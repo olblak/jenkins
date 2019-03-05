@@ -78,6 +78,11 @@ cat <<EOT> settings-release.xml
       <password>$REPOSITORY_PASSWORD</password>
     </server>
     <server>
+      <id>jenkins-public</id>
+      <username>$REPOSITORY_USERNAME</username>
+      <password>$REPOSITORY_PASSWORD</password>
+    </server>
+    <server>
       <id>releases</id>
       <username>$REPOSITORY_USERNAME</username>
       <password>$REPOSITORY_PASSWORD</password>
