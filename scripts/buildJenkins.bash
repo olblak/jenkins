@@ -35,6 +35,10 @@ export SIGN_KEYSTORE
 export SIGN_STOREPASS
 export SIGN_CERTIFICATE
 
+function clean(){
+    mvn release:clean
+}
+
 function configureGit(){
   git config --local user.email "${GIT_EMAIL}"
   git config --local user.name "${GIT_NAME}"
@@ -115,6 +119,7 @@ function main(){
     while [ $# -gt 0 ];
     do
       case "$1" in
+            --cleanRelease) echo "Clean Release" && generateSettingsXml && clean;;
             --configureGPG) echo "ConfigureGPG" && configureGPG ;;
             --configureKeystore) echo "Configure Keystore" && configureKeystore ;;
             --configureGit) echo "Configure Git" && configureGit ;;

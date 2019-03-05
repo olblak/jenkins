@@ -80,7 +80,7 @@ spec:
       stage('Clean Release') {
         steps {
           container('maven') {
-            sh 'mvn release:clean'
+            sh 'scripts/buildJenkins.bash --cleanRelease'
           }
         }
       }
