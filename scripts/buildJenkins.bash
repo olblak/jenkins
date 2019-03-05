@@ -131,7 +131,7 @@ function main(){
             --validateKeystore) echo "Validate Keystore"  && validateKeystore ;;
             --validateGPG) echo "Validate GPG" && validateGPG ;;
             --prepareRelease) echo "Prepare Release" && generateSettingsXml && prepareRelease ;;
-            --performRelease) echo "Stage Release" && performRelease ;;
+            --performRelease) echo "Perform Release" && performRelease ;;
             -h) echo "help" ;;
             -*) echo "help" ;;
         esac
