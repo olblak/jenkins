@@ -36,7 +36,7 @@ export SIGN_STOREPASS
 export SIGN_CERTIFICATE
 
 function clean(){
-    mvn release:clean
+    mvn -P"${MAVEN_PROFILE}" -s settings-release.xml -B  release:clean
 }
 
 function configureGit(){
