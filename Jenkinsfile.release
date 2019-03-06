@@ -69,6 +69,8 @@ spec:
       GPG_FILE                      = 'gpg-test-jenkins-release.gpg'
       GPG_KEYNAME                   = 'test-jenkins-release'
       GPG_PASSPHRASE                = credentials('release-gpg-passphrase')
+      JENKINS_WAR                   = "$WORKSPACE/war/target/jenkins.war"
+      JENKINS_ASC                   = "$WORKSPACE/war/target/jenkins.asc"
       REPOSITORY_USERNAME           = credentials('maven-repository-username')
       REPOSITORY_PASSWORD           = credentials('maven-repository-password')
       SIGN_ALIAS                    = 'jenkins'
@@ -171,24 +173,22 @@ spec:
               sh '''
                 sed -i 's#url = https://github.com/#url = git@github.com:#' .git/config
                 git push origin HEAD:master "$RELEASE_SCM_TAG"
+                gpg --verify "$JENKINS_ASC" "$JENKINS_WAR"
+                unzip -qc "$JENKINS_WAR" META-INF/MANIFEST.MF | grep 'Jenkins-Version' | awk '{print $2}'
               '''
             }
           }
         }
       }
-      stage('Publish Jenkins Package') {
+      stage('Push Jenkins WAR') {
         environment {
           AZURE_STORAGE_ACCOUNT = 'overninjenkinsreleases'
           AZURE_STORAGE_KEY = credentials('release-storage-account-key')
-          JENKINS_WAR = "$WORKSPACE/war/target/jenkins.war"
-          JENKINS_ASC = "$WORKSPACE/war/target/jenkins.asc"
           AZURE_SHARE_NAME = 'war-rc'
         }
         steps {
           container('azure-cli') {
             sh '''
-              gpg --verify "$JENKINS_ASC" "$JENKINS_WAR"
-              unzip -qc "$JENKINS_WAR" META-INF/MANIFEST.MF | grep 'Jenkins-Version' | awk '{print $2}'
               az storage container upload \
                 --acount-name "$AZURE_STORAGE_ACCOUNT" \
                 --share-name "$AZURE_SHARE_NAME" \
