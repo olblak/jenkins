@@ -195,6 +195,12 @@ spec:
                 --path "$VERSION/jenkins.war" \
                 --timeout 30 \
                 --source "$JENKINS_WAR"
+              az storage container upload \
+                --acount-name "$AZURE_STORAGE_ACCOUNT" \
+                --share-name "$AZURE_SHARE_NAME" \
+                --path "$VERSION/jenkins.asc" \
+                --timeout 30 \
+                --source "$JENKINS_ASC"
             '''
           }
         }
