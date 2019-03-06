@@ -60,6 +60,12 @@ spec:
         daysToKeepStr: '',
         numToKeepStr: '10'
       )
+      disableConcurrentBuilds()
+      retry(3)
+    }
+    triggers {
+      // Trigger a new release once a week on Sunday
+      cron('H H(0-7) * * 0')
     }
 
     environment {
