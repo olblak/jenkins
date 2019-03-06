@@ -76,7 +76,7 @@ spec:
       GPG_KEYNAME                   = 'test-jenkins-release'
       GPG_PASSPHRASE                = credentials('release-gpg-passphrase')
       JENKINS_WAR                   = "$WORKSPACE/war/target/jenkins.war"
-      JENKINS_ASC                   = "$WORKSPACE/war/target/jenkins.asc"
+      JENKINS_ASC                   = "$WORKSPACE/war/target/jenkins.war.asc"
       REPOSITORY_USERNAME           = credentials('maven-repository-username')
       REPOSITORY_PASSWORD           = credentials('maven-repository-password')
       SIGN_ALIAS                    = 'jenkins'
@@ -204,7 +204,7 @@ spec:
               az storage container upload \
                 --acount-name "$AZURE_STORAGE_ACCOUNT" \
                 --share-name "$AZURE_SHARE_NAME" \
-                --path "$VERSION/jenkins.asc" \
+                --path "$VERSION/jenkins.war.asc" \
                 --timeout 30 \
                 --source "$JENKINS_ASC"
             '''
