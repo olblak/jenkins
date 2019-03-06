@@ -188,25 +188,25 @@ spec:
       }
       stage('Push Jenkins WAR') {
         environment {
-          AZURE_STORAGE_ACCOUNT = 'overninjenkinsreleases'
+          AZURE_STORAGE_ACCOUNT = 'overnin2jenkinsreleases'
           AZURE_STORAGE_KEY = credentials('release-storage-account-key')
-          AZURE_SHARE_NAME = 'war-rc'
+          AZURE_CONTAINER_NAME = 'war'
         }
         steps {
           container('azure-cli') {
             sh '''
-              az storage container upload \
-                --acount-name "$AZURE_STORAGE_ACCOUNT" \
-                --share-name "$AZURE_SHARE_NAME" \
-                --path "$VERSION/jenkins.war" \
+              az storage blob upload \
+                --account-name "$AZURE_STORAGE_ACCOUNT" \
+                --container-name "$AZURE_CONTAINER_NAME" \
+                --name "$VERSION/jenkins.war" \
                 --timeout 30 \
-                --source "$JENKINS_WAR"
-              az storage container upload \
-                --acount-name "$AZURE_STORAGE_ACCOUNT" \
-                --share-name "$AZURE_SHARE_NAME" \
-                --path "$VERSION/jenkins.war.asc" \
+                --file "$JENKINS_WAR"
+              az storage blob upload \
+                --account-name "$AZURE_STORAGE_ACCOUNT" \
+                --container-name "$AZURE_CONTAINER_NAME" \
+                --name "$VERSION/jenkins.war.asc" \
                 --timeout 30 \
-                --source "$JENKINS_ASC"
+                --file "$JENKINS_ASC"
             '''
           }
         }
