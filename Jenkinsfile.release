@@ -154,7 +154,7 @@ spec:
               script {
                 def properties = readProperties file: 'release.properties'
                 env.RELEASE_SCM_TAG = properties['scm.tag']
-                env.RELEASE_VERSION = properties['project.rel.org.jenkins-ci.main\:jenkins-war']
+                env.RELEASE_VERSION = properties['project.rel.org.jenkins-ci.main:jenkins-war']
               }
             }
           }
