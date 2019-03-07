@@ -154,6 +154,7 @@ spec:
               script {
                 def properties = readProperties file: 'release.properties'
                 env.RELEASE_SCM_TAG = properties['scm.tag']
+                env.RELEASE_VERSION = properties['project.rel.org.jenkins-ci.main\:jenkins-war']
               }
             }
           }
@@ -198,13 +199,25 @@ spec:
               az storage blob upload \
                 --account-name "$AZURE_STORAGE_ACCOUNT" \
                 --container-name "$AZURE_CONTAINER_NAME" \
-                --name "$VERSION/jenkins.war" \
+                --name "$RELEASE_VERSION/jenkins.war" \
                 --timeout 30 \
                 --file "$JENKINS_WAR"
               az storage blob upload \
                 --account-name "$AZURE_STORAGE_ACCOUNT" \
                 --container-name "$AZURE_CONTAINER_NAME" \
-                --name "$VERSION/jenkins.war.asc" \
+                --name "$RELEASE_VERSION/jenkins.war.asc" \
+                --timeout 30 \
+                --file "$JENKINS_ASC"
+              az storage blob upload \
+                --account-name "$AZURE_STORAGE_ACCOUNT" \
+                --container-name "$AZURE_CONTAINER_NAME" \
+                --name "latest/jenkins.war" \
+                --timeout 30 \
+                --file "$JENKINS_WAR"
+              az storage blob upload \
+                --account-name "$AZURE_STORAGE_ACCOUNT" \
+                --container-name "$AZURE_CONTAINER_NAME" \
+                --name "latest/jenkins.war.asc" \
                 --timeout 30 \
                 --file "$JENKINS_ASC"
             '''
