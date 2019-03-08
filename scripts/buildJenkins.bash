@@ -14,13 +14,10 @@ WORKSPACE="/tmp"
 : "${GIT_EMAIL:=jenkins-bot@example.com}"
 : "${GIT_NAME:=jenkins-bot}"
 : "${GPG_KEYNAME:=test-jenkins-release}"
-: "${GPG_PASSPHRASE:?GPG Passphrase Required}" # Password must be the same for gpg agent and gpg key
 : "${SIGN_ALIAS:=jenkins}"
 : "${SIGN_KEYSTORE:=${WORKSPACE}/jenkins.pfx}"
-: "${SIGN_STOREPASS:=pass}"
 : "${SIGN_CERTIFICATE:=jenkins.pem}"
 : "${REPOSITORY_USERNAME:=olblak}"
-: "${REPOSITORY_PASSWORD:?Repository Password Missing}"
 
 export MAVEN_PROFILE
 export GIT_REPOSITORY
@@ -35,6 +32,18 @@ export SIGN_KEYSTORE
 export SIGN_STOREPASS
 export SIGN_CERTIFICATE
 
+function requireRepositoryPassword(){
+  : "${REPOSITORY_PASSWORD:?Repository Password Missing}"
+}
+
+function requireGPGPassphrase(){
+  : "${GPG_PASSPHRASE:?GPG Passphrase Required}" # Password must be the same for gpg agent and gpg key
+}
+
+function requireKeystorePass(){
+  : "${SIGN_STOREPASS:?pass}"
+}
+
 function clean(){
     mvn -P"${MAVEN_PROFILE}" -s settings-release.xml -B  release:clean
 }
@@ -45,6 +54,7 @@ function configureGit(){
 }
 
 function configureGPG(){ 
+  requireGPGPassphrase
   if ! gpg --fingerprint "${GPG_KEYNAME}"; then
     if [ ! -f "${GPG_FILE}" ]; then
       exit "${GPG_KEYNAME} or ${GPG_FILE} cannot be found"
@@ -57,6 +67,7 @@ function configureGPG(){
 
 
 function configureKeystore(){
+  requireKeystorePass
   if [ ! -f ${SIGN_CERTIFICATE} ]; then
       exit "${SIGN_CERTIFICATE} not found"
   else
@@ -69,6 +80,7 @@ function configureKeystore(){
 }
 
 function generateSettingsXml(){
+requireRepositoryPassword
 cat <<EOT> settings-release.xml
 <settings>
   <servers>
@@ -94,16 +106,21 @@ EOT
 
 
 function prepareRelease(){
+  requireGPGPassphrase
+  requireKeystorePass
   printf "\\n Prepare Jenkins Release\\n\\n"
   mvn -P"${MAVEN_PROFILE}" -s settings-release.xml -B release:prepare
 }
 
 function performRelease(){
+  requireGPGPassphrase
+  requireKeystorePass
   printf "\\n Perform Jenkins Release\\n\\n"
   mvn -P"${MAVEN_PROFILE}" -s settings-release.xml -B release:perform
 }
 
 function validateKeystore(){
+  requireKeystorePass
   keytool -keystore "${SIGN_KEYSTORE}" -storepass "${SIGN_STOREPASS}" -list -alias "${SIGN_ALIAS}"
 }
 function validateGPG(){
