@@ -695,11 +695,12 @@ THE SOFTWARE.
             <artifactId>maven-release-plugin</artifactId>
             <configuration>
               <!-- enable release profile during the release, create IPS package, and sign bits. -->
-              <arguments>-P release,sign -DskipTests=true</arguments>
-              <!--<arguments>-P release,sign</arguments>-->
+                    <!-- Skip Test <arguments>-P release,sign -DskipTests=true</arguments>-->
+              <arguments>-P release,sign</arguments>
               <!-- work around for a bug in javadoc plugin that causes the release to fail. see MRELEASE-271 -->
               <preparationGoals>clean install</preparationGoals>
-              <goals>-DskipTests -Danimal.sniffer.skip=false javadoc:javadoc deploy</goals>
+                  <!-- Skipp Test <goals>-DskipTests -Danimal.sniffer.skip=false javadoc:javadoc deploy</goals>-->
+              <goals>-Danimal.sniffer.skip=false javadoc:javadoc deploy</goals>
               <!--<goals>javadoc:javadoc deploy</goals>-->
               <pushChanges>false</pushChanges>
               <localCheckout>true</localCheckout>
