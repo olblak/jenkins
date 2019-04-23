@@ -123,7 +123,7 @@ spec:
       }
       stage('Retrieve Signing GPG key') {
         environment {
-          AZURE_STORAGE_ACCOUNT         = 'overninreleasekey'
+          AZURE_STORAGE_ACCOUNT         = 'prodreleasecore'
           AZURE_STORAGE_CONTAINER_NAME  = 'gpg'
           AZURE_STORAGE_KEY             = credentials('gpg-storage-account-key')
         }
@@ -189,7 +189,7 @@ spec:
       }
       stage('Push Jenkins WAR') {
         environment {
-          AZURE_STORAGE_ACCOUNT = 'overnin2jenkinsreleases'
+          AZURE_STORAGE_ACCOUNT = 'prodreleasecore'
           AZURE_STORAGE_KEY = credentials('release-storage-account-key')
           AZURE_CONTAINER_NAME = 'war'
         }
