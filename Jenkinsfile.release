@@ -113,7 +113,7 @@ spec:
               # Download Certificate from Azure KeyVault
               az keyvault secret download \
                 --vault-name "$AZURE_VAULT_NAME" \
-                --name "AZURE_VAULT_CERT" \
+                --name "$AZURE_VAULT_CERT" \
                 --file "$AZURE_VAULT_FILE"
               # Convert private/public key to a pkcs12 keystore
               scripts/buildJenkins.bash --configureKeystore
