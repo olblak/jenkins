@@ -7,8 +7,8 @@
   Maven docker image cannot be run with the root user
   https://batmat.net/2017/01/30/do-not-run-your-tests-in-continuous-integration-with-the-root-user/
   Docker container related to jenkins-jnlp require:
-  * uid 10000,
-  * gid 10000
+  * uid 1000,
+  * gid 1000
   * /home/jenkins/.jenkins
 
   Jenkins Plugins:
@@ -16,7 +16,7 @@
     * SSH-agent
 
   docker image olblak/maven is just a customized docker image based on maven where maven is run as
-  user jenkins with uid 10000 and gid 10000, there is also a volume /home/jenkins/.jenkins defined in the image
+  user jenkins with uid 1000 and gid 1000, there is also a volume /home/jenkins/.jenkins defined in the image
   otherwise the directory is created with root permission and Jenkins cannot add files there
 */
 
@@ -94,8 +94,8 @@ spec:
       }
       stage('Retrieve Signing Certificate') {
         environment {
-          AZURE_VAULT_NAME              = 'overnin'
-          AZURE_VAULT_CERT              = 'sandbox'
+          AZURE_VAULT_NAME              = 'prodreleasecore'
+          AZURE_VAULT_CERT              = 'prodreleasecore'
           AZURE_VAULT_FILE              = 'jenkins.pem'
           AZURE_VAULT_CLIENT_ID         = credentials('azure-vault-client-id')
           AZURE_VAULT_CLIENT_SECRET     = credentials('azure-vault-client-secret')
@@ -113,7 +113,7 @@ spec:
               # Download Certificate from Azure KeyVault
               az keyvault secret download \
                 --vault-name "$AZURE_VAULT_NAME" \
-                --name sandbox \
+                --name "AZURE_VAULT_CERT" \
                 --file "$AZURE_VAULT_FILE"
               # Convert private/public key to a pkcs12 keystore
               scripts/buildJenkins.bash --configureKeystore
