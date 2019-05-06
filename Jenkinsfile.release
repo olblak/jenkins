@@ -187,43 +187,6 @@ spec:
           }
         }
       }
-      stage('Push Jenkins WAR') {
-        environment {
-          AZURE_STORAGE_ACCOUNT = 'prodreleasecore'
-          AZURE_STORAGE_KEY = credentials('release-storage-account-key')
-          AZURE_CONTAINER_NAME = 'war'
-        }
-        steps {
-          container('azure-cli') {
-            sh '''
-              az storage blob upload \
-                --account-name "$AZURE_STORAGE_ACCOUNT" \
-                --container-name "$AZURE_CONTAINER_NAME" \
-                --name "$RELEASE_VERSION/jenkins.war" \
-                --timeout 30 \
-                --file "$JENKINS_WAR"
-              az storage blob upload \
-                --account-name "$AZURE_STORAGE_ACCOUNT" \
-                --container-name "$AZURE_CONTAINER_NAME" \
-                --name "$RELEASE_VERSION/jenkins.war.asc" \
-                --timeout 30 \
-                --file "$JENKINS_ASC"
-              az storage blob upload \
-                --account-name "$AZURE_STORAGE_ACCOUNT" \
-                --container-name "$AZURE_CONTAINER_NAME" \
-                --name "latest/jenkins.war" \
-                --timeout 30 \
-                --file "$JENKINS_WAR"
-              az storage blob upload \
-                --account-name "$AZURE_STORAGE_ACCOUNT" \
-                --container-name "$AZURE_CONTAINER_NAME" \
-                --name "latest/jenkins.war.asc" \
-                --timeout 30 \
-                --file "$JENKINS_ASC"
-            '''
-          }
-        }
-      }
     }
     post {
     /*
