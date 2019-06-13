@@ -83,14 +83,16 @@ function generateSettingsXml(){
 requireRepositoryPassword
 cat <<EOT> settings-release.xml
 <settings>
+  <mirrors>
+    <mirror>
+      <id>mirror-jenkins-public</id>
+      <url>http://nexus/repository/jenkins-public/</url>
+      <mirrorOf>repo.jenkins-ci.org</mirrorOf>
+    </mirror>
+  </mirrors>
   <servers>
     <server>
-      <id>snapshots</id>
-      <username>$REPOSITORY_USERNAME</username>
-      <password>$REPOSITORY_PASSWORD</password>
-    </server>
-    <server>
-      <id>jenkins-public</id>
+      <id>releases-snapshots</id>
       <username>$REPOSITORY_USERNAME</username>
       <password>$REPOSITORY_PASSWORD</password>
     </server>
@@ -99,7 +101,13 @@ cat <<EOT> settings-release.xml
       <username>$REPOSITORY_USERNAME</username>
       <password>$REPOSITORY_PASSWORD</password>
     </server>
+    <server>
+      <id>mirror-jenkins-public</id>
+      <username>$REPOSITORY_USERNAME</username>
+      <password>$REPOSITORY_PASSWORD</password>
+    </server>
   </servers>
+
 </settings>
 EOT
 }
