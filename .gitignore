@@ -56,4 +56,4 @@ war/yarn-error.log
 .java-version
 *.pem
 
-stagingDir
+settings-release.xml
