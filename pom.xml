@@ -687,7 +687,7 @@ THE SOFTWARE.
             <configuration>
               <altDeploymentRepository>releases::http://nexus/repository/maven-releases/</altDeploymentRepository>
               <altSnapshotDeploymentRepository>releases-snapshot::http://nexus/repository/maven-snapshots</altSnapshotDeploymentRepository>
-              <deployAtEnd>true</deployAtEnd>
+              <deployAtEnd>false</deployAtEnd>
               <retryFailedDeploymentCount>3</retryFailedDeploymentCount>
             </configuration>
           </plugin>
