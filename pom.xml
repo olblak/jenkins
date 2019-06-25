@@ -702,14 +702,9 @@ THE SOFTWARE.
                   <!-- Skipp Test <goals>-DskipTests -Danimal.sniffer.skip=false javadoc:javadoc deploy</goals>-->
               <goals>-Danimal.sniffer.skip=false javadoc:javadoc deploy</goals>
               <!--<goals>javadoc:javadoc deploy</goals>-->
-              <pushChanges>false</pushChanges>
+              <pushChanges>true</pushChanges>
               <localCheckout>true</localCheckout>
-              <tagNameFormat>jenkins-@{project.version}</tagNameFormat>
-              <!--
-              <connectionUrl>scm:git:git://github.com/olblak/jenkins.git</connectionUrl>
-              <stagingRepository>releases::default::http://nexus/repository/maven-releases/</stagingRepository>
-              <workingDirectory>stagingDir</workingDirectory>
-              -->
+              <tagNameFormat>release-@{project.version}</tagNameFormat>
             </configuration>
           </plugin>
           <plugin>

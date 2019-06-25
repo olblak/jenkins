@@ -149,6 +149,7 @@ spec:
                 scripts/buildJenkins.bash --configureGPG
                 scripts/buildJenkins.bash --configureGit
                 scripts/buildJenkins.bash --prepareRelease
+                sed -i 's#url = https://github.com/#url = git@github.com:#' .git/config
               '''
               script {
                 def properties = readProperties file: 'release.properties'
@@ -164,24 +165,10 @@ spec:
           container('maven') {
             // Maven required git push permission on https://github.com/jenkinsci/jenkins
             sshagent(['release-key']) {
-              sh 'scripts/buildJenkins.bash --performRelease'
-            }
-          }
-        }
-      }
-      stage('Push Commits') {
-        steps {
-          container('maven') {
-            // Maven required git push permission on https://github.com/jenkinsci/jenkins
-            //input 'Publish?'
-            sshagent(['release-key']) {
-              // By default git config url is set to https instead of ssh
               sh '''
-                sed -i 's#url = https://github.com/#url = git@github.com:#' .git/config
-                git push origin HEAD:master "$RELEASE_SCM_TAG"
-                gpg --verify "$JENKINS_ASC" "$JENKINS_WAR"
+                scripts/buildJenkins.bash --performRelease
                 unzip -qc "$JENKINS_WAR" META-INF/MANIFEST.MF | grep 'Jenkins-Version' | awk '{print $2}'
-              '''
+                '''
             }
           }
         }
