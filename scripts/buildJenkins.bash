@@ -9,6 +9,7 @@ set -u    # Attempt to use undefined variable outputs error message, and forces 
 # Temporary
 WORKSPACE="/tmp"
 
+: "${BRANCH_NAME:=master}"
 : "${MAVEN_PROFILE:=release}"
 : "${GIT_REPOSITORY:=scm:git:git://github.com/olblak/jenkins.git}"
 : "${GIT_EMAIL:=jenkins-bot@example.com}"
@@ -49,6 +50,7 @@ function clean(){
 }
 
 function configureGit(){
+  git checkout "${BRANCH_NAME}"
   git config --local user.email "${GIT_EMAIL}"
   git config --local user.name "${GIT_NAME}"
 }
