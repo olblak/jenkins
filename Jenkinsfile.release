@@ -87,6 +87,7 @@ spec:
       stage('Clean Release') {
         steps {
           container('maven') {
+            checkout scm
             sh 'scripts/buildJenkins.bash --cleanRelease'
           }
         }
@@ -148,8 +149,8 @@ spec:
               sh '''
                 scripts/buildJenkins.bash --configureGPG
                 scripts/buildJenkins.bash --configureGit
-                scripts/buildJenkins.bash --prepareRelease
                 sed -i 's#url = https://github.com/#url = git@github.com:#' .git/config
+                scripts/buildJenkins.bash --prepareRelease
               '''
               script {
                 def properties = readProperties file: 'release.properties'
