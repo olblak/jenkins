@@ -702,7 +702,7 @@ THE SOFTWARE.
                   <!-- Skipp Test <goals>-DskipTests -Danimal.sniffer.skip=false javadoc:javadoc deploy</goals>-->
               <goals>-Danimal.sniffer.skip=false javadoc:javadoc deploy</goals>
               <!--<goals>javadoc:javadoc deploy</goals>-->
-              <pushChanges>true</pushChanges>
+              <pushChanges>false</pushChanges>
               <localCheckout>true</localCheckout>
               <tagNameFormat>release-@{project.version}</tagNameFormat>
             </configuration>

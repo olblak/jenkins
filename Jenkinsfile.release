@@ -149,7 +149,6 @@ spec:
               sh '''
                 scripts/buildJenkins.bash --configureGPG
                 scripts/buildJenkins.bash --configureGit
-                sed -i 's#url = https://github.com/#url = git@github.com:#' .git/config
                 scripts/buildJenkins.bash --prepareRelease
               '''
               script {
@@ -161,6 +160,21 @@ spec:
           }
         }
       }
+      stage('Push Commits') {
+        steps {
+          container('maven') {
+            sshagent(['release-key']) {
+              // By default git config url is set to https instead of ssh
+              // We want to only commit on the local repository used by a jenkins job
+              // and not the one defined from pom.xml
+              sh '''
+                sed -i 's#url = https://github.com/#url = git@github.com:#' .git/config
+                git push origin "HEAD:$BRANCH_NAME" "$RELEASE_SCM_TAG"
+              '''
+            }
+          }
+        }
+      }
       stage('Perform Release') {
         steps {
           container('maven') {
@@ -168,6 +182,7 @@ spec:
             sshagent(['release-key']) {
               sh '''
                 scripts/buildJenkins.bash --performRelease
+                gpg --verify "$JENKINS_ASC" "$JENKINS_WAR"
                 unzip -qc "$JENKINS_WAR" META-INF/MANIFEST.MF | grep 'Jenkins-Version' | awk '{print $2}'
                 '''
             }
