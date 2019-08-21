@@ -39,7 +39,7 @@ spec:
     workdir: /home/jenkins
     env:
       - name: HOME
-        value: "/home/jenkins/workspace"
+        value: "/home/jenkins"
     command:
     - cat
     tty: true
