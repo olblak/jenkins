@@ -20,16 +20,11 @@ WORKSPACE="/tmp"
 : "${MAVEN_PROFILE:=release}"
 : "${MAVEN_REPOSITORY_USERNAME:=jenkins-bot}"
 : "${MAVEN_REPOSITORY_URL:=http://nexus/repository}"
+: "${MAVEN_REPOSITORY_NAME:=maven-releases}"
+: "${MAVEN_REPOSITORY_SNAPSHOT_NAME:=maven-snapshots}"
 
-export GIT_REPOSITORY
-export GIT_EMAIL
-export GIT_NAME
 export GPG_KEYNAME
 export GPG_PASSPHRASE
-export MAVEN_PROFILE
-export MAVEN_REPOSITORY_PASSWORD
-export MAVEN_REPOSITORY_URL
-export MAVEN_REPOSITORY_USERNAME
 export SIGN_ALIAS
 export SIGN_KEYSTORE
 export SIGN_STOREPASS
@@ -96,12 +91,12 @@ cat <<EOT> settings-release.xml
   </mirrors>
   <servers>
     <server>
-      <id>releases-snapshots</id>
+      <id>$MAVEN_REPOSITORY_NAME</id>
       <username>$MAVEN_REPOSITORY_USERNAME</username>
       <password>$MAVEN_REPOSITORY_PASSWORD</password>
     </server>
     <server>
-      <id>releases</id>
+      <id>$MAVEN_REPOSITORY_SNAPSHOT_NAME</id>
       <username>$MAVEN_REPOSITORY_USERNAME</username>
       <password>$MAVEN_REPOSITORY_PASSWORD</password>
     </server>
@@ -128,7 +123,13 @@ function performRelease(){
   requireGPGPassphrase
   requireKeystorePass
   printf "\\n Perform Jenkins Release\\n\\n"
-  mvn -P"${MAVEN_PROFILE}" -s settings-release.xml -B release:perform
+  mvn \
+    -P"${MAVEN_PROFILE}" \
+    -D ALT_DEPLOYMENT_REPOSITORY="${MAVEN_REPOSITORY_NAME}::${MAVEN_REPOSITORY_URL}/${MAVEN_REPOSITORY_NAME}/" \
+    -D ALT_DEPLOYMENT_REPOSITORY_SNAPSHOT="${MAVEN_REPOSITORY_SNAPSHOT_NAME}::${MAVEN_REPOSITORY_URL}/${MAVEN_REPOSITORY_SNAPSHOT_NAME}/" \
+    -s settings-release.xml \
+    -B \
+    release:perform
 }
 
 function validateKeystore(){
