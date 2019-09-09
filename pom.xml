@@ -584,8 +584,8 @@ THE SOFTWARE.
           <plugin>
             <artifactId>maven-deploy-plugin</artifactId>
             <configuration>
-              <altDeploymentRepository>releases::${ env.MAVEN_REPOSITORY_URL}/maven-releases/</altDeploymentRepository>
-              <altSnapshotDeploymentRepository>releases-snapshot::${ env.MAVEN_REPOSITORY_URL }/maven-snapshots</altSnapshotDeploymentRepository>
+              <altDeploymentRepository>${ ALT_DEPLOYMENT_REPOSITORY }</altDeploymentRepository>
+              <altSnapshotDeploymentRepository>${ ALT_DEPLOYMENT_REPOSITORY_SNAPSHOT }</altSnapshotDeploymentRepository>
               <deployAtEnd>false</deployAtEnd>
               <retryFailedDeploymentCount>3</retryFailedDeploymentCount>
             </configuration>
