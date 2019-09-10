@@ -125,8 +125,9 @@ function performRelease(){
   printf "\\n Perform Jenkins Release\\n\\n"
   mvn \
     -P"${MAVEN_PROFILE}" \
-    -D ALT_DEPLOYMENT_REPOSITORY="${MAVEN_REPOSITORY_NAME}::${MAVEN_REPOSITORY_URL}/${MAVEN_REPOSITORY_NAME}/" \
-    -D ALT_DEPLOYMENT_REPOSITORY_SNAPSHOT="${MAVEN_REPOSITORY_SNAPSHOT_NAME}::${MAVEN_REPOSITORY_URL}/${MAVEN_REPOSITORY_SNAPSHOT_NAME}/" \
+    -D altDeploymentRepository="${MAVEN_REPOSITORY_NAME}::${MAVEN_REPOSITORY_URL}/${MAVEN_REPOSITORY_NAME}/" \
+    -D altReleaseDeploymentRepository="${MAVEN_REPOSITORY_NAME}::${MAVEN_REPOSITORY_URL}/${MAVEN_REPOSITORY_NAME}/" \
+    -D altSnapshotDeploymentRepository="${MAVEN_REPOSITORY_SNAPSHOT_NAME}::${MAVEN_REPOSITORY_URL}/${MAVEN_REPOSITORY_SNAPSHOT_NAME}/" \
     -s settings-release.xml \
     -B \
     release:perform
