@@ -584,8 +584,6 @@ THE SOFTWARE.
           <plugin>
             <artifactId>maven-deploy-plugin</artifactId>
             <configuration>
-              <altDeploymentRepository>${ ALT_DEPLOYMENT_REPOSITORY }</altDeploymentRepository>
-              <altSnapshotDeploymentRepository>${ ALT_DEPLOYMENT_REPOSITORY_SNAPSHOT }</altSnapshotDeploymentRepository>
               <deployAtEnd>false</deployAtEnd>
               <retryFailedDeploymentCount>3</retryFailedDeploymentCount>
             </configuration>
