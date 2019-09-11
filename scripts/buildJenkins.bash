@@ -6,9 +6,6 @@ set -u    # Attempt to use undefined variable outputs error message, and forces 
 # https://maven.apache.org/maven-release/maven-release-plugin/perform-mojo.html
 # mvn -Prelease help:active-profiles
 
-# Temporary
-WORKSPACE="/tmp"
-
 : "${BRANCH_NAME:=experimental}"
 : "${GIT_REPOSITORY:=scm:git:git://github.com/jenkinsci/jenkins.git}"
 : "${GIT_EMAIL:=jenkins-bot@example.com}"
@@ -92,35 +89,6 @@ cat <<EOT> settings-release.xml
       <activation>
         <activeByDefault>true</activeByDefault>
       </activation>
-      <properties>
-        <!--
-          maven-deploy-plugin
-        -->
-        <deployAtEnd>false</deployAtEnd>
-        <retryFailedDeploymentCount>3</retryFailedDeploymentCount>
-        <!--
-          maven-release-plugin
-        -->
-        <arguments>-P release,sign</arguments>
-        <preparationGoals>clean install</preparationGoals>
-        <goals>-Danimal.sniffer.skip=false javadoc:javadoc deploy</goals>
-        <pushChanges>false</pushChanges>
-        <localCheckout>true</localCheckout>
-        <tagNameFormat>release-@{project.version}</tagNameFormat>
-        <stagingRepository>${MAVEN_REPOSITORY_URL}/${MAVEN_REPOSITORY_NAME}</stagingRepository>
-        <!--
-          maven-gpg-plugin
-        -->
-        <gpg.keyname>${GPG_KEYNAME}</gpg.keyname>
-        <gpg.passphrase>${GPG_PASSPHRASE}</gpg.passphrase>
-        <!--
-          maven-jarsigner-plugin
-        -->
-         <jarsigner.keystore>${SIGN_KEYSTORE}</jarsigner.keystore>
-         <jarsigner.alias>${SIGN_ALIAS}</jarsigner.alias>
-         <jarsigner.storepass>${SIGN_STOREPASS}</jarsigner.storepass>
-         <jarsigner.keypass>${SIGN_STOREPASS}</jarsigner.keypass>
-      </properties>
       <repositories>
         <repository>
           <id>$MAVEN_REPOSITORY_NAME</id>
@@ -140,20 +108,22 @@ cat <<EOT> settings-release.xml
         </repository>
       </repositories>
       <pluginRepositories>
-        <id>$MAVEN_REPOSITORY_NAME</id>
-        <name>$MAVEN_REPOSITORY_NAME</name>
-        <releases>
-          <enabled>true</enabled>
-          <updatePolicy>always</updatePolicy>
-          <checksumPolicy>warn</checksumPolicy>
-        </releases>
-        <snapshots>
-          <enabled>true</enabled>
-          <updatePolicy>never</updatePolicy>
-          <checksumPolicy>fail</checksumPolicy>
-        </snapshots>
-        <url>${MAVEN_REPOSITORY_URL}/${MAVEN_REPOSITORY_NAME}/</url>
-        <layout>default</layout>
+        <pluginRepository>
+          <id>$MAVEN_REPOSITORY_NAME</id>
+          <name>$MAVEN_REPOSITORY_NAME</name>
+          <releases>
+            <enabled>true</enabled>
+            <updatePolicy>always</updatePolicy>
+            <checksumPolicy>warn</checksumPolicy>
+          </releases>
+          <snapshots>
+            <enabled>true</enabled>
+            <updatePolicy>never</updatePolicy>
+            <checksumPolicy>fail</checksumPolicy>
+          </snapshots>
+          <url>${MAVEN_REPOSITORY_URL}/${MAVEN_REPOSITORY_NAME}/</url>
+          <layout>default</layout>
+        </pluginRepository>
       </pluginRepositories>
     </profile>
   </profiles>
@@ -181,14 +151,48 @@ function prepareRelease(){
   requireGPGPassphrase
   requireKeystorePass
   printf "\\n Prepare Jenkins Release\\n\\n"
-  mvn -s settings-release.xml -B release:prepare
+  mvn \
+    -DdeployAtEnd=false \
+    -DretryFailedDeploymentCount=3 \
+    -Darguments="-P release,sign" \
+    -DpreparationGoals="clean install" \
+    -Dgoals="-Danimal.sniffer.skip=false javadoc:javadoc deploy"
+    -DpushChanges=false \
+    -DlocalCheckout=true \
+    -DtagNameFormat="release-@{project.version}" \
+    -DstagingRepository="${MAVEN_REPOSITORY_URL}/${MAVEN_REPOSITORY_NAME}" \
+    -Dgpg.keyname="${GPG_KEYNAME}" \
+    -Dgpg.passphrase="${GPG_PASSPHRASE}" \
+    -Djarsigner.keystore="${SIGN_KEYSTORE}" \
+    -Djarsigner.alias="${SIGN_ALIAS}" \
+    -Djarsigner.storepass="${SIGN_STOREPASS}" \
+    -Djarsigner.keypass="${SIGN_STOREPASS}"
+    -s settings-release.xml \
+    -B release:prepare
 }
 
 function performRelease(){
   requireGPGPassphrase
   requireKeystorePass
   printf "\\n Perform Jenkins Release\\n\\n"
-  mvn -s settings-release.xml -B release:stage
+  mvn \
+    -DdeployAtEnd=false \
+    -DretryFailedDeploymentCount=3 \
+    -Darguments="-P release,sign" \
+    -DpreparationGoals="clean install" \
+    -Dgoals="-Danimal.sniffer.skip=false javadoc:javadoc deploy"
+    -DpushChanges=false \
+    -DlocalCheckout=true \
+    -DtagNameFormat="release-@{project.version}" \
+    -DstagingRepository="${MAVEN_REPOSITORY_URL}/${MAVEN_REPOSITORY_NAME}" \
+    -Dgpg.keyname="${GPG_KEYNAME}" \
+    -Dgpg.passphrase="${GPG_PASSPHRASE}" \
+    -Djarsigner.keystore="${SIGN_KEYSTORE}" \
+    -Djarsigner.alias="${SIGN_ALIAS}" \
+    -Djarsigner.storepass="${SIGN_STOREPASS}" \
+    -Djarsigner.keypass="${SIGN_STOREPASS}"
+    -s settings-release.xml \
+    -B release:stage
 }
 
 function validateKeystore(){
