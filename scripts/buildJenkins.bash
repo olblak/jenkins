@@ -22,13 +22,7 @@ WORKSPACE="/tmp"
 : "${MAVEN_REPOSITORY_URL:=http://nexus/repository}"
 : "${MAVEN_REPOSITORY_NAME:=maven-releases}"
 : "${MAVEN_REPOSITORY_SNAPSHOT_NAME:=maven-snapshots}"
-
-export GPG_KEYNAME
-export GPG_PASSPHRASE
-export SIGN_ALIAS
-export SIGN_KEYSTORE
-export SIGN_STOREPASS
-export SIGN_CERTIFICATE
+: "${MAVEN_PUBLIC_JENKINS_REPOSITORY_MIRROR_URL:=http://nexus/repository/jenkins-public/}"
 
 function requireRepositoryPassword(){
   : "${MAVEN_REPOSITORY_PASSWORD:?Repository Password Missing}"
@@ -52,7 +46,7 @@ function configureGit(){
   git config --local user.name "${GIT_NAME}"
 }
 
-function configureGPG(){ 
+function configureGPG(){
   requireGPGPassphrase
   if ! gpg --fingerprint "${GPG_KEYNAME}"; then
     if [ ! -f "${GPG_FILE}" ]; then
@@ -80,23 +74,92 @@ function configureKeystore(){
 
 function generateSettingsXml(){
 requireRepositoryPassword
+requireKeystorePass
+requireGPGPassphrase
+
 cat <<EOT> settings-release.xml
 <settings>
   <mirrors>
     <mirror>
       <id>mirror-jenkins-public</id>
-      <url>http://nexus/repository/jenkins-public/</url>
+      <url>${MAVEN_PUBLIC_JENKINS_REPOSITORY_MIRROR_URL}</url>
       <mirrorOf>repo.jenkins-ci.org</mirrorOf>
     </mirror>
   </mirrors>
+  <profiles>
+    <profile>
+      <id>automated-release</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <!--
+          maven-deploy-plugin
+        -->
+        <deployAtEnd>false</deployAtEnd>
+        <retryFailedDeploymentCount>3</retryFailedDeploymentCount>
+        <!--
+          maven-release-plugin
+        -->
+        <arguments>-P release,sign</arguments>
+        <preparationGoals>clean install</preparationGoals>
+        <goals>-Danimal.sniffer.skip=false javadoc:javadoc deploy</goals>
+        <pushChanges>false</pushChanges>
+        <localCheckout>true</localCheckout>
+        <tagNameFormat>release-@{project.version}</tagNameFormat>
+        <stagingRepository>${MAVEN_REPOSITORY_URL}/${MAVEN_REPOSITORY_NAME}</stagingRepository>
+        <!--
+          maven-gpg-plugin
+        -->
+        <gpg.keyname>${GPG_KEYNAME}</gpg.keyname>
+        <gpg.passphrase>${GPG_PASSPHRASE}</gpg.passphrase>
+        <!--
+          maven-jarsigner-plugin
+        -->
+         <jarsigner.keystore>${SIGN_KEYSTORE}</jarsigner.keystore>
+         <jarsigner.alias>${SIGN_ALIAS}</jarsigner.alias>
+         <jarsigner.storepass>${SIGN_STOREPASS}</jarsigner.storepass>
+         <jarsigner.keypass>${SIGN_STOREPASS}</jarsigner.keypass>
+      </properties>
+      <repositories>
+        <repository>
+          <id>$MAVEN_REPOSITORY_NAME</id>
+          <name>$MAVEN_REPOSITORY_NAME</name>
+          <releases>
+            <enabled>true</enabled>
+            <updatePolicy>always</updatePolicy>
+            <checksumPolicy>warn</checksumPolicy>
+          </releases>
+          <snapshots>
+            <enabled>true</enabled>
+            <updatePolicy>never</updatePolicy>
+            <checksumPolicy>fail</checksumPolicy>
+          </snapshots>
+          <url>${MAVEN_REPOSITORY_URL}/${MAVEN_REPOSITORY_NAME}/</url>
+          <layout>default</layout>
+        </repository>
+      </repositories>
+      <pluginRepositories>
+        <id>$MAVEN_REPOSITORY_NAME</id>
+        <name>$MAVEN_REPOSITORY_NAME</name>
+        <releases>
+          <enabled>true</enabled>
+          <updatePolicy>always</updatePolicy>
+          <checksumPolicy>warn</checksumPolicy>
+        </releases>
+        <snapshots>
+          <enabled>true</enabled>
+          <updatePolicy>never</updatePolicy>
+          <checksumPolicy>fail</checksumPolicy>
+        </snapshots>
+        <url>${MAVEN_REPOSITORY_URL}/${MAVEN_REPOSITORY_NAME}/</url>
+        <layout>default</layout>
+      </pluginRepositories>
+    </profile>
+  </profiles>
   <servers>
     <server>
       <id>$MAVEN_REPOSITORY_NAME</id>
-      <username>$MAVEN_REPOSITORY_USERNAME</username>
-      <password>$MAVEN_REPOSITORY_PASSWORD</password>
-    </server>
-    <server>
-      <id>$MAVEN_REPOSITORY_SNAPSHOT_NAME</id>
       <username>$MAVEN_REPOSITORY_USERNAME</username>
       <password>$MAVEN_REPOSITORY_PASSWORD</password>
     </server>
@@ -106,7 +169,9 @@ cat <<EOT> settings-release.xml
       <password>$MAVEN_REPOSITORY_PASSWORD</password>
     </server>
   </servers>
-
+  <activeProfiles>
+    <activeProfile>release</activeProfile>
+  </activeProfiles>
 </settings>
 EOT
 }
@@ -116,21 +181,14 @@ function prepareRelease(){
   requireGPGPassphrase
   requireKeystorePass
   printf "\\n Prepare Jenkins Release\\n\\n"
-  mvn -P"${MAVEN_PROFILE}" -s settings-release.xml -B release:prepare
+  mvn -s settings-release.xml -B release:prepare
 }
 
 function performRelease(){
   requireGPGPassphrase
   requireKeystorePass
   printf "\\n Perform Jenkins Release\\n\\n"
-  mvn \
-    -P"${MAVEN_PROFILE}" \
-    -D altDeploymentRepository="${MAVEN_REPOSITORY_NAME}::${MAVEN_REPOSITORY_URL}/${MAVEN_REPOSITORY_NAME}/" \
-    -D altReleaseDeploymentRepository="${MAVEN_REPOSITORY_NAME}::${MAVEN_REPOSITORY_URL}/${MAVEN_REPOSITORY_NAME}/" \
-    -D altSnapshotDeploymentRepository="${MAVEN_REPOSITORY_SNAPSHOT_NAME}::${MAVEN_REPOSITORY_URL}/${MAVEN_REPOSITORY_SNAPSHOT_NAME}/" \
-    -s settings-release.xml \
-    -B \
-    release:perform
+  mvn -s settings-release.xml -B release:stage
 }
 
 function validateKeystore(){
@@ -159,6 +217,7 @@ function main(){
             --configureGPG) echo "ConfigureGPG" && configureGPG ;;
             --configureKeystore) echo "Configure Keystore" && configureKeystore ;;
             --configureGit) echo "Configure Git" && configureGit ;;
+            --generateSettingsXml) echo "Generate settings-release.xml" && generateSettingsXml ;;
             --validateKeystore) echo "Validate Keystore"  && validateKeystore ;;
             --validateGPG) echo "Validate GPG" && validateGPG ;;
             --prepareRelease) echo "Prepare Release" && generateSettingsXml && prepareRelease ;;
