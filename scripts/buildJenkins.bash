@@ -1,16 +1,21 @@
 #!/bin/bash
 
-set -e    # Abort script at first error
-set -u    # Attempt to use undefined variable outputs error message, and forces an exit
+set -euxo pipefail
 
 # https://maven.apache.org/maven-release/maven-release-plugin/perform-mojo.html
 # mvn -Prelease help:active-profiles
+
+: "${WORKSPACE:=$PWD}" # Normally defined from Jenkins environment
 
 : "${BRANCH_NAME:=experimental}"
 : "${GIT_REPOSITORY:=scm:git:git://github.com/jenkinsci/jenkins.git}"
 : "${GIT_EMAIL:=jenkins-bot@example.com}"
 : "${GIT_NAME:=jenkins-bot}"
+: "${GIT_SSH:=ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null}"
 : "${GPG_KEYNAME:=test-jenkins-release}"
+: "${GPG_FILE:=gpg-test-jenkins-release.gpg}"
+: "${JENKINS_WAR:=$WORKSPACE/war/target/jenkins.war}"
+: "${JENKINS_ASC:=$WORKSPACE/war/target/jenkins.war.asc}"
 : "${SIGN_ALIAS:=jenkins}"
 : "${SIGN_KEYSTORE:=${WORKSPACE}/jenkins.pfx}"
 : "${SIGN_CERTIFICATE:=jenkins.pem}"
@@ -31,6 +36,12 @@ function requireGPGPassphrase(){
 
 function requireKeystorePass(){
   : "${SIGN_STOREPASS:?pass}"
+}
+
+function requireAzureKeyvaultCredentials(){
+  : "${AZURE_VAULT_CLIENT_ID:? Require AZURE_VAULT_CLIENT_ID}"
+  : "${AZURE_VAULT_CLIENT_SECRET:? Required AZURE_VAULT_CLIENT_SECRET}"
+  : "${AZURE_VAULT_TENANT_ID:? Required AZURE_VAULT_TENANT_ID}"
 }
 
 function clean(){
@@ -58,15 +69,49 @@ function configureGPG(){
 
 function configureKeystore(){
   requireKeystorePass
-  if [ ! -f ${SIGN_CERTIFICATE} ]; then
+  if [ ! -f "${SIGN_CERTIFICATE}" ]; then
       exit "${SIGN_CERTIFICATE} not found"
   else
     openssl pkcs12 -export \
-      -out $SIGN_KEYSTORE \
-      -in ${SIGN_CERTIFICATE} \
-      -password pass:$SIGN_STOREPASS \
-      -name $SIGN_ALIAS
+      -out "$SIGN_KEYSTORE" \
+      -in "${SIGN_CERTIFICATE}" \
+      -password "pass:$SIGN_STOREPASS" \
+      -name "$SIGN_ALIAS"
   fi
+}
+
+function azureAccountAuth(){
+  az login --service-principal \
+    -u "$AZURE_VAULT_CLIENT_ID" \
+    -p "$AZURE_VAULT_CLIENT_SECRET" \
+    -t "$AZURE_VAULT_TENANT_ID"
+}
+
+# Download Certificate from Azure KeyVault
+function downloadAzureKeyvaultSecret(){
+  requireAzureKeyvaultCredentials
+  azureAccountAuth
+
+  az keyvault secret download \
+    --vault-name "$AZURE_VAULT_NAME" \
+    --name "$AZURE_VAULT_CERT" \
+    --file "$AZURE_VAULT_FILE"
+}
+
+function getGPGKeyFromAzure(){
+  az storage blob download \
+    --account-name "$AZURE_STORAGE_ACCOUNT" \
+    --container-name "$AZURE_STORAGE_CONTAINER_NAME" \
+    --name "$GPG_FILE" \
+    --file "$GPG_FILE"
+}
+
+function getGPGKeyFromAzure(){
+  az storage blob download \
+    --account-name "$AZURE_STORAGE_ACCOUNT" \
+    --container-name "$AZURE_STORAGE_CONTAINER_NAME" \
+    --name "$GPG_FILE" \
+    --file "$GPG_FILE"
 }
 
 function generateSettingsXml(){
@@ -156,7 +201,7 @@ function prepareRelease(){
     -DretryFailedDeploymentCount=3 \
     -Darguments="-P release,sign" \
     -DpreparationGoals="clean install" \
-    -Dgoals="-Danimal.sniffer.skip=false javadoc:javadoc deploy"
+    -Dgoals="-Danimal.sniffer.skip=false javadoc:javadoc deploy" \
     -DpushChanges=false \
     -DlocalCheckout=true \
     -DtagNameFormat="release-@{project.version}" \
@@ -166,12 +211,12 @@ function prepareRelease(){
     -Djarsigner.keystore="${SIGN_KEYSTORE}" \
     -Djarsigner.alias="${SIGN_ALIAS}" \
     -Djarsigner.storepass="${SIGN_STOREPASS}" \
-    -Djarsigner.keypass="${SIGN_STOREPASS}"
+    -Djarsigner.keypass="${SIGN_STOREPASS}" \
     -s settings-release.xml \
     -B release:prepare
 }
 
-function performRelease(){
+function stageRelease(){
   requireGPGPassphrase
   requireKeystorePass
   printf "\\n Perform Jenkins Release\\n\\n"
@@ -180,7 +225,7 @@ function performRelease(){
     -DretryFailedDeploymentCount=3 \
     -Darguments="-P release,sign" \
     -DpreparationGoals="clean install" \
-    -Dgoals="-Danimal.sniffer.skip=false javadoc:javadoc deploy"
+    -Dgoals="-Danimal.sniffer.skip=false javadoc:javadoc deploy"\
     -DpushChanges=false \
     -DlocalCheckout=true \
     -DtagNameFormat="release-@{project.version}" \
@@ -190,17 +235,28 @@ function performRelease(){
     -Djarsigner.keystore="${SIGN_KEYSTORE}" \
     -Djarsigner.alias="${SIGN_ALIAS}" \
     -Djarsigner.storepass="${SIGN_STOREPASS}" \
-    -Djarsigner.keypass="${SIGN_STOREPASS}"
+    -Djarsigner.keypass="${SIGN_STOREPASS}" \
     -s settings-release.xml \
     -B release:stage
 }
+
+#function promoteMavenArtifact(){
+# # http://maven.apache.org/plugins/maven-stage-plugin/copy-mojo.html  
+#  mvn \
+#    -Dversion=$RELEASE_VERSION \
+#    -DsourceRepositoryId=XXX \
+#    -DtargetRepositoryId=YYY \
+#    stage:copy
+#
+#}
 
 function validateKeystore(){
   requireKeystorePass
   keytool -keystore "${SIGN_KEYSTORE}" -storepass "${SIGN_STOREPASS}" -list -alias "${SIGN_ALIAS}"
 }
-function validateGPG(){
-  true
+function verifyGPGSignature(){
+  gpg --verify "$JENKINS_ASC" "$JENKINS_WAR"
+  unzip -qc "$JENKINS_WAR" META-INF/MANIFEST.MF | grep 'Jenkins-Version' | awk '{print $2}'
 }
 
 function main(){
@@ -209,10 +265,10 @@ function main(){
     configureKeystore
     configureGit
     validateKeystore
-    validateGPG
+    verifyGPGSignature
     generateSettingsXml
     prepareRelease
-    performRelease
+    stageRelease
   else
     while [ $# -gt 0 ];
     do
@@ -222,10 +278,12 @@ function main(){
             --configureKeystore) echo "Configure Keystore" && configureKeystore ;;
             --configureGit) echo "Configure Git" && configureGit ;;
             --generateSettingsXml) echo "Generate settings-release.xml" && generateSettingsXml ;;
+            --downloadAzureKeyvaultSecret) echo "Download Azure Key Vault Secret" && downloadAzureKeyvaultSecret ;;
+            --getGPGKeyFromAzure) echo "Download GPG Key from Azure" && getGPGKeyFromAzure ;;
             --validateKeystore) echo "Validate Keystore"  && validateKeystore ;;
-            --validateGPG) echo "Validate GPG" && validateGPG ;;
+            --verifyGPGSignature) echo "Verify GPG Signature" && verifyGPGSignature ;;
             --prepareRelease) echo "Prepare Release" && generateSettingsXml && prepareRelease ;;
-            --performRelease) echo "Perform Release" && performRelease ;;
+            --stageRelease) echo "Perform Release" && stageRelease ;;
             -h) echo "help" ;;
             -*) echo "help" ;;
         esac
