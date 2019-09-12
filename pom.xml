@@ -582,6 +582,19 @@ THE SOFTWARE.
       <build>
         <plugins>
           <plugin>
+            <artifactId>maven-release-plugin</artifactId>
+            <configuration>
+              <!-- work around for a bug in javadoc plugin that causes the release to fail. see MRELEASE-271 -->
+              <preparationGoals>clean install</preparationGoals>
+              <goals>javadoc:javadoc deploy</goals>
+              <pushChanges>true</pushChanges>
+              <localCheckout>true</localCheckout>
+              <tagNameFormat>release-@{project.version}</tagNameFormat>
+              <stagingRepository>${stagingRepository}</stagingRepository>
+            </configuration>
+          </plugin>
+
+          <plugin>
             <artifactId>maven-assembly-plugin</artifactId>
             <inherited>false</inherited>
             <executions>
@@ -610,7 +623,24 @@ THE SOFTWARE.
                 </goals>
               </execution>
             </executions>
+            <configuration>
+              <keyname>${gpg.keyname}</keyname>
+              <passphrase>${gpg.passphrase}</passphrase>
+              <gpgArguments>
+                  <arg>--pinentry-mode</arg>
+                  <arg>loopback</arg>
+              </gpgArguments>
+            </configuration>
           </plugin>
+          <plugin>
+            <artifactId>maven-jarsigner-plugin</artifactId>
+            <configuration>
+              <keystore>${jarsigner.keystore}</keystore>
+              <alias>${jarsigner.alias}</alias>
+              <storepass>${jarsigner.storepass}</storepass>
+              <keypass>${jarsigner.keypass}</keypass>
+            </configuration>
+           </plugin>
         </plugins>
       </build>
     </profile>
