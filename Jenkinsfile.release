@@ -89,7 +89,7 @@ spec:
       stage('Clean Release') {
         steps {
           container('maven') {
-            git branch: 'release', credentialsId: 'release-key', url: 'git@github.com:olblak/jenkins.git'
+            git branch: 'master', credentialsId: 'release-key', url: 'git@github.com:olblak/jenkins.git'
             sh 'scripts/buildJenkins.bash --cleanRelease'
           }
         }
