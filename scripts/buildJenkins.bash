@@ -5,7 +5,7 @@ set -euxo pipefail
 # https://maven.apache.org/maven-release/maven-release-plugin/perform-mojo.html
 # mvn -Prelease help:active-profiles
 
-: "${WORKSPACE:=$PWD}" # Normally defined from Jenkins environment
+#: "${WORKSPACE:=$PWD}" # Normally defined from Jenkins environment
 
 : "${BRANCH_NAME:=experimental}"
 : "${GIT_REPOSITORY:=scm:git:git://github.com/jenkinsci/jenkins.git}"
@@ -225,7 +225,7 @@ function stageRelease(){
     -DretryFailedDeploymentCount=3 \
     -Darguments="-P release,sign" \
     -DpreparationGoals="clean install" \
-    -Dgoals="-Danimal.sniffer.skip=false javadoc:javadoc deploy"\
+    -Dgoals="-Danimal.sniffer.skip=false javadoc:javadoc deploy" \
     -DpushChanges=false \
     -DlocalCheckout=true \
     -DtagNameFormat="release-@{project.version}" \
