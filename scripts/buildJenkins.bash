@@ -134,6 +134,15 @@ cat <<EOT> settings-release.xml
       <activation>
         <activeByDefault>true</activeByDefault>
       </activation>
+      <properties>
+        <stagingRepository>${MAVEN_REPOSITORY_URL}/${MAVEN_REPOSITORY_NAME}</stagingRepository>
+        <gpg.keyname>${GPG_KEYNAME}</gpg.keyname>
+        <gpg.passphrase>${GPG_PASSPHRASE}</gpg.passphrase>
+        <jarsigner.keystore>${SIGN_KEYSTORE}</jarsigner.keystore>
+        <jarsigner.alias>${SIGN_ALIAS}</jarsigner.alias>
+        <jarsigner.storepass>${SIGN_STOREPASS}</jarsigner.storepass>
+        <jarsigner.keypass>${SIGN_STOREPASS}</jarsigner.keypass>
+      </properties>
       <repositories>
         <repository>
           <id>$MAVEN_REPOSITORY_NAME</id>
@@ -196,57 +205,23 @@ function prepareRelease(){
   requireGPGPassphrase
   requireKeystorePass
   printf "\\n Prepare Jenkins Release\\n\\n"
-  mvn \
-    -DdeployAtEnd=false \
-    -DretryFailedDeploymentCount=3 \
-    -Darguments="-P release,sign" \
-    -DpreparationGoals="clean install" \
-    -Dgoals="-Danimal.sniffer.skip=false javadoc:javadoc deploy" \
-    -DpushChanges=false \
-    -DlocalCheckout=true \
-    -DtagNameFormat="release-@{project.version}" \
-    -DstagingRepository="${MAVEN_REPOSITORY_URL}/${MAVEN_REPOSITORY_NAME}" \
-    -Dgpg.keyname="${GPG_KEYNAME}" \
-    -Dgpg.passphrase="${GPG_PASSPHRASE}" \
-    -Djarsigner.keystore="${SIGN_KEYSTORE}" \
-    -Djarsigner.alias="${SIGN_ALIAS}" \
-    -Djarsigner.storepass="${SIGN_STOREPASS}" \
-    -Djarsigner.keypass="${SIGN_STOREPASS}" \
-    -s settings-release.xml \
-    -B release:prepare
+  mvn -B release:prepare -s settings-release.xml
 }
 
 function stageRelease(){
   requireGPGPassphrase
   requireKeystorePass
   printf "\\n Perform Jenkins Release\\n\\n"
-  mvn \
-    -DdeployAtEnd=false \
-    -DretryFailedDeploymentCount=3 \
-    -Darguments="-P release,sign" \
-    -DpreparationGoals="clean install" \
-    -Dgoals="-Danimal.sniffer.skip=false javadoc:javadoc deploy" \
-    -DpushChanges=false \
-    -DlocalCheckout=true \
-    -DtagNameFormat="release-@{project.version}" \
-    -DstagingRepository="${MAVEN_REPOSITORY_URL}/${MAVEN_REPOSITORY_NAME}" \
-    -Dgpg.keyname="${GPG_KEYNAME}" \
-    -Dgpg.passphrase="${GPG_PASSPHRASE}" \
-    -Djarsigner.keystore="${SIGN_KEYSTORE}" \
-    -Djarsigner.alias="${SIGN_ALIAS}" \
-    -Djarsigner.storepass="${SIGN_STOREPASS}" \
-    -Djarsigner.keypass="${SIGN_STOREPASS}" \
-    -s settings-release.xml \
-    -B release:stage
+  mvn -B release:stage -s settings-release.xml
 }
 
 #function promoteMavenArtifact(){
 # # http://maven.apache.org/plugins/maven-stage-plugin/copy-mojo.html  
 #  mvn \
+#    stage:copy \
 #    -Dversion=$RELEASE_VERSION \
 #    -DsourceRepositoryId=XXX \
-#    -DtargetRepositoryId=YYY \
-#    stage:copy
+#    -DtargetRepositoryId=YYY
 #
 #}
 
