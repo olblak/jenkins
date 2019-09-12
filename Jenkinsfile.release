@@ -106,7 +106,10 @@ spec:
 
         steps {
           container('azure-cli') {
-            sh 'scripts/buildJenkins.bash --downloadAzureKeyvaultSecret --configureKeystore'
+            sh '''
+              scripts/buildJenkins.bash --downloadAzureKeyvaultSecret
+              scripts/buildJenkins.bash --configureKeystore
+            '''
           }
         }
       }
@@ -131,7 +134,11 @@ spec:
             // Maven required git push permission on https://github.com/jenkinsci/jenkins
             sshagent(['release-key']) {
               // Maven Release requires gpg key with password password and a certificate key with password
-              sh 'scripts/buildJenkins.bash --configureGPG --configureGit --prepareRelease'
+              sh '''
+                scripts/buildJenkins.bash --configureGPG
+                scripts/buildJenkins.bash --configureGit
+                scripts/buildJenkins.bash --prepareRelease
+              '''
 
               script {
                 def properties = readProperties file: 'release.properties'
@@ -162,7 +169,10 @@ spec:
           container('maven') {
             // Maven required git push permission on https://github.com/jenkinsci/jenkins
             sshagent(['release-key']) {
-              sh 'scripts/buildJenkins.bash --stageRelease --verifyGPGSignature'
+              sh '''
+                scripts/buildJenkins.bash --stageRelease
+                scripts/buildJenkins.bash --verifyGPGSignature
+              '''
             }
           }
         }
