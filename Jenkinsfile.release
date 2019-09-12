@@ -41,13 +41,17 @@ spec:
       - name: HOME
         value: "/home/jenkins"
     command:
-    - cat
+      - sleep
+    args:
+      - 99d
     tty: true
   - name: azure-cli
     image: microsoft/azure-cli:2.0.59
     workdir: /home/jenkins
     command:
-    - cat
+      - sleep
+    args:
+      - 99d
     tty: true
 '''
       }
@@ -74,13 +78,10 @@ spec:
       GPG_FILE                      = 'gpg-test-jenkins-release.gpg'
       GPG_KEYNAME                   = 'test-jenkins-release'
       GPG_PASSPHRASE                = credentials('release-gpg-passphrase')
-      JENKINS_WAR                   = "$WORKSPACE/war/target/jenkins.war"
-      JENKINS_ASC                   = "$WORKSPACE/war/target/jenkins.war.asc"
       MAVEN_REPOSITORY_URL          = "http://nexus/repository"
       MAVEN_REPOSITORY_USERNAME     = credentials('maven-repository-username')
       MAVEN_REPOSITORY_PASSWORD     = credentials('maven-repository-password')
       SIGN_ALIAS                    = 'jenkins'
-      SIGN_KEYSTORE                 = "$WORKSPACE/jenkins.pfx"
       SIGN_STOREPASS                = credentials('signing-cert-pass')
     }
 
@@ -88,7 +89,7 @@ spec:
       stage('Clean Release') {
         steps {
           container('maven') {
-            checkout scm
+            git branch: 'release', credentialsId: 'release-key', url: 'git@github.com:olblak/jenkins.git'
             sh 'scripts/buildJenkins.bash --cleanRelease'
           }
         }
@@ -105,20 +106,7 @@ spec:
 
         steps {
           container('azure-cli') {
-            // TODO move into a shell script in the repository
-            sh '''
-              az login --service-principal \
-                -u "$AZURE_VAULT_CLIENT_ID" \
-                -p "$AZURE_VAULT_CLIENT_SECRET" \
-                -t "$AZURE_VAULT_TENANT_ID"
-              # Download Certificate from Azure KeyVault
-              az keyvault secret download \
-                --vault-name "$AZURE_VAULT_NAME" \
-                --name "$AZURE_VAULT_CERT" \
-                --file "$AZURE_VAULT_FILE"
-              # Convert private/public key to a pkcs12 keystore
-              scripts/buildJenkins.bash --configureKeystore
-            '''
+            sh 'scripts/buildJenkins.bash --downloadAzureKeyvaultSecret --configureKeystore'
           }
         }
       }
@@ -132,11 +120,7 @@ spec:
         steps {
           container('azure-cli') {
             sh '''
-              az storage blob download \
-              --account-name $AZURE_STORAGE_ACCOUNT \
-              --container-name $AZURE_STORAGE_CONTAINER_NAME \
-              --name "$GPG_FILE" \
-              --file "$GPG_FILE"
+              scripts/buildJenkins.bash --getGPGKeyFromAzure
             '''
           }
         }
@@ -147,11 +131,8 @@ spec:
             // Maven required git push permission on https://github.com/jenkinsci/jenkins
             sshagent(['release-key']) {
               // Maven Release requires gpg key with password password and a certificate key with password
-              sh '''
-                scripts/buildJenkins.bash --configureGPG
-                scripts/buildJenkins.bash --configureGit
-                scripts/buildJenkins.bash --prepareRelease
-              '''
+              sh 'scripts/buildJenkins.bash --configureGPG --configureGit --prepareRelease'
+
               script {
                 def properties = readProperties file: 'release.properties'
                 env.RELEASE_SCM_TAG = properties['scm.tag']
@@ -176,16 +157,12 @@ spec:
           }
         }
       }
-      stage('Perform Release') {
+      stage('Stage Release') {
         steps {
           container('maven') {
             // Maven required git push permission on https://github.com/jenkinsci/jenkins
             sshagent(['release-key']) {
-              sh '''
-                scripts/buildJenkins.bash --performRelease
-                gpg --verify "$JENKINS_ASC" "$JENKINS_WAR"
-                unzip -qc "$JENKINS_WAR" META-INF/MANIFEST.MF | grep 'Jenkins-Version' | awk '{print $2}'
-                '''
+              sh 'scripts/buildJenkins.bash --stageRelease --verifyGPGSignature'
             }
           }
         }
