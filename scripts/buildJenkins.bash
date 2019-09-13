@@ -208,6 +208,14 @@ function prepareRelease(){
   mvn -B release:prepare -s settings-release.xml
 }
 
+function pushCommits(){
+  : "${RELEASE_SCM_TAG:?RELEASE_SCM_TAG not definded}"
+
+  # Ensure we use ssh credentials
+  sed -i 's#url = https://github.com/#url = git@github.com:#' .git/config
+  git push origin "HEAD:$BRANCH_NAME" "$RELEASE_SCM_TAG"
+}
+
 function stageRelease(){
   requireGPGPassphrase
   requireKeystorePass
@@ -258,6 +266,7 @@ function main(){
             --validateKeystore) echo "Validate Keystore"  && validateKeystore ;;
             --verifyGPGSignature) echo "Verify GPG Signature" && verifyGPGSignature ;;
             --prepareRelease) echo "Prepare Release" && generateSettingsXml && prepareRelease ;;
+            --pushCommits) echo "Push commits on $BRANCH_NAME" && pushCommits ;;
             --stageRelease) echo "Perform Release" && stageRelease ;;
             -h) echo "help" ;;
             -*) echo "help" ;;
