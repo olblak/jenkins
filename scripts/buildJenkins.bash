@@ -200,7 +200,6 @@ cat <<EOT> settings-release.xml
 EOT
 }
 
-
 function prepareRelease(){
   requireGPGPassphrase
   requireKeystorePass
@@ -214,6 +213,11 @@ function pushCommits(){
   # Ensure we use ssh credentials
   sed -i 's#url = https://github.com/#url = git@github.com:#' .git/config
   git push origin "HEAD:$BRANCH_NAME" "$RELEASE_SCM_TAG"
+}
+
+function rollback(){
+  mvn release:rollback
+  git push --delete origin "$RELEASE_SCM_TAG"
 }
 
 function stageRelease(){
@@ -267,6 +271,7 @@ function main(){
             --verifyGPGSignature) echo "Verify GPG Signature" && verifyGPGSignature ;;
             --prepareRelease) echo "Prepare Release" && generateSettingsXml && prepareRelease ;;
             --pushCommits) echo "Push commits on $BRANCH_NAME" && pushCommits ;;
+            --rollback) echo "Rollback release $RELEASE_SCM_TAG" && rollblack ;;
             --stageRelease) echo "Perform Release" && stageRelease ;;
             -h) echo "help" ;;
             -*) echo "help" ;;
