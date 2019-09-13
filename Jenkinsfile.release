@@ -30,7 +30,8 @@ apiVersion: v1
 kind: Pod
 metadata:
   labels:
-    some-label: jenkins-release
+    job: jenkins-release
+    jenkins.agent: jenkins-release
 spec:
   containers:
   - name: maven
@@ -75,6 +76,8 @@ spec:
       GIT_EMAIL                     = 'jenkins-bot@example.com'
       GIT_NAME                      = 'jenkins-bot'
       GIT_SSH_COMMAND               = 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+      GIT_BRANCH                    = 'master'
+      GIT_REPOSITORY                = 'git@github.com:olblak/jenkins.git'
       GPG_FILE                      = 'gpg-test-jenkins-release.gpg'
       GPG_KEYNAME                   = 'test-jenkins-release'
       GPG_PASSPHRASE                = credentials('release-gpg-passphrase')
@@ -89,12 +92,12 @@ spec:
       stage('Clean Release') {
         steps {
           container('maven') {
-            git branch: 'master', credentialsId: 'release-key', url: 'git@github.com:olblak/jenkins.git'
+            git branch: env.GIT_BRANCH, credentialsId: 'release-key', url: env.GIT_REPOSITORY
             sh 'scripts/buildJenkins.bash --cleanRelease'
           }
         }
       }
-      stage('Retrieve Signing Certificate') {
+      stage('Get Code Signing Certificate') {
         environment {
           AZURE_VAULT_NAME              = 'prodreleasecore'
           AZURE_VAULT_CERT              = 'prodreleasecore'
@@ -113,7 +116,7 @@ spec:
           }
         }
       }
-      stage('Retrieve Signing GPG key') {
+      stage('Get GPG key') {
         environment {
           AZURE_STORAGE_ACCOUNT         = 'prodreleasecore'
           AZURE_STORAGE_CONTAINER_NAME  = 'gpg'
@@ -153,17 +156,16 @@ spec:
         steps {
           container('maven') {
             sshagent(['release-key']) {
-              // By default git config url is set to https instead of ssh
-              // We want to only commit on the local repository used by a jenkins job
-              // and not the one defined from pom.xml
+              // We want to only commit to the repository used by the jenkins job
+              // instead of jenkinsci/jenkins as defined in pom.xml
               sh '''
-                sed -i 's#url = https://github.com/#url = git@github.com:#' .git/config
-                git push origin "HEAD:$BRANCH_NAME" "$RELEASE_SCM_TAG"
+                scripts/buildJenkins.bash --pushCommits
               '''
             }
           }
         }
       }
+
       stage('Stage Release') {
         steps {
           container('maven') {
