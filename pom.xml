@@ -587,7 +587,7 @@ THE SOFTWARE.
               <!-- work around for a bug in javadoc plugin that causes the release to fail. see MRELEASE-271 -->
               <preparationGoals>clean install</preparationGoals>
               <goals>javadoc:javadoc deploy</goals>
-              <pushChanges>true</pushChanges>
+              <pushChanges>false</pushChanges>
               <localCheckout>true</localCheckout>
               <tagNameFormat>release-@{project.version}</tagNameFormat>
               <stagingRepository>${stagingRepository}</stagingRepository>
