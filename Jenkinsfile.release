@@ -153,21 +153,19 @@ pipeline {
             cleanWs()
         }
     */
-        failure {
-            input '''Pipeline failed.
+      failure {
+        input '''Pipeline failed.
 We will keep the build pod around to help you diagnose any failures.
 Select Proceed or Abort to terminate the build pod'''
-        }
-
-        steps {
-          container('maven') {
-            // Maven required git push permission on https://github.com/jenkinsci/jenkins
-            sshagent(['release-key']) {
-              sh '''
-                scripts/buildJenkins.bash --rollback
-              '''
-            }
+        container('maven') {
+          // Maven required git push permission on https://github.com/jenkinsci/jenkins
+          sshagent(['release-key']) {
+            sh '''
+              scripts/buildJenkins.bash --rollback
+            '''
           }
         }
+      }
+
     }
 }
