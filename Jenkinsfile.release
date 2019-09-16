@@ -22,40 +22,7 @@
 
 pipeline {
     agent {
-      kubernetes {
-        label 'jenkins-release'
-        defaultContainer 'jnlp'
-        yaml '''
-apiVersion: v1
-kind: Pod
-metadata:
-  labels:
-    job: jenkins-release
-    jenkins.agent: jenkins-release
-spec:
-  containers:
-  - name: maven
-    image: olblak/maven:3-jdk-8
-    imagePullPolicy: Always
-    workdir: /home/jenkins
-    env:
-      - name: HOME
-        value: "/home/jenkins"
-    command:
-      - sleep
-    args:
-      - 99d
-    tty: true
-  - name: azure-cli
-    image: microsoft/azure-cli:2.0.59
-    workdir: /home/jenkins
-    command:
-      - sleep
-    args:
-      - 99d
-    tty: true
-'''
-      }
+      label 'jenkins-release-linux'
     }
 
     options {
