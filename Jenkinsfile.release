@@ -22,7 +22,11 @@
 
 pipeline {
     agent {
-      label 'jenkins-release-linux'
+      kubernetes {
+        label 'jenkins-release-linux'
+        yamlFile 'linuxPodTemplate.yaml'
+        inheritFrom 'jnlp-linux'
+      }
     }
 
     options {
