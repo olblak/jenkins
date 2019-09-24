@@ -25,7 +25,7 @@ spec:
         cpu: "400m"
     securityContext:
       privileged: false
-    tty: true
+    tty: false
   - args:
     - "99d"
     command:
@@ -47,7 +47,7 @@ spec:
         cpu: "2"
     securityContext:
       privileged: false
-    tty: true
+    tty: false
   nodeSelector:
     kubernetes.io/os: "linux"
   restartPolicy: "Never"
