@@ -636,7 +636,7 @@ THE SOFTWARE.
             <configuration>
               <certs>true</certs>
               <errorWhenNotSigned>true</errorWhenNotSigned>
-              <!-- <arguments>-strict</arguments> <!--otherwise certificate chains will be ignored-->
+              <!-- <arguments>-strict</arguments>--> <!--otherwise certificate chains will be ignored-->
               <keystore>${jarsigner.keystore}</keystore>
               <alias>${jarsigner.alias}</alias>
               <storepass>${jarsigner.storepass}</storepass>
