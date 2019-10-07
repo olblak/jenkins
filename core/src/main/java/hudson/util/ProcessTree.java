@@ -167,8 +167,12 @@ public abstract class ProcessTree implements Iterable<OSProcess>, IProcessTree, 
      */
     public void killAll(Process proc, Map<String, String> modelEnvVars) throws InterruptedException {
         LOGGER.fine("killAll: process="+proc+" and envs="+modelEnvVars);
-        OSProcess p = get(proc);
-        if(p!=null) p.killRecursively();
+
+        if (proc != null) {
+            OSProcess p = get(proc);
+            if (p != null) p.killRecursively();
+        }
+
         if(modelEnvVars!=null)
             killAll(modelEnvVars);
     }
@@ -229,7 +233,7 @@ public abstract class ProcessTree implements Iterable<OSProcess>, IProcessTree, 
          * Immediate child processes.
          */
         public final List<OSProcess> getChildren() {
-            List<OSProcess> r = new ArrayList<OSProcess>();
+            List<OSProcess> r = new ArrayList<>();
             for (OSProcess p : ProcessTree.this)
                 if(p.getParent()==this)
                     r.add(p);
@@ -581,7 +585,7 @@ public abstract class ProcessTree implements Iterable<OSProcess>, IProcessTree, 
                     LOGGER.log(FINEST, "Failed to get the environment variables of process with pid=" + p.getPid(), e);
                 }
             }
-            return null;
+            return env;
         }
         
         private synchronized EnvVars getEnvironmentVariables2() throws WindowsOSProcessException {
@@ -953,7 +957,7 @@ public abstract class ProcessTree implements Iterable<OSProcess>, IProcessTree, 
             public synchronized List<String> getArguments() {
                 if(arguments!=null)
                     return arguments;
-                arguments = new ArrayList<String>();
+                arguments = new ArrayList<>();
                 try {
                     byte[] cmdline = readFileToByteArray(getFile("cmdline"));
                     int pos=0;
@@ -1183,7 +1187,7 @@ public abstract class ProcessTree implements Iterable<OSProcess>, IProcessTree, 
                 if (arguments != null)
                     return arguments;
 
-                arguments = new ArrayList<String>(argc);
+                arguments = new ArrayList<>(argc);
                 if (argc == 0) {
                     return arguments;
                 }
@@ -1470,7 +1474,7 @@ public abstract class ProcessTree implements Iterable<OSProcess>, IProcessTree, 
                 if(arguments!=null)
                     return arguments;
 
-                arguments = new ArrayList<String>(argc);
+                arguments = new ArrayList<>(argc);
 		if (argc == 0) {
 		    return arguments;
 		}
@@ -1678,7 +1682,7 @@ public abstract class ProcessTree implements Iterable<OSProcess>, IProcessTree, 
                 try {
 // allocate them first, so that the parse error wil result in empty data
                     // and avoid retry.
-                    arguments = new ArrayList<String>();
+                    arguments = new ArrayList<>();
                     envVars = new EnvVars();
 
                     IntByReference intByRef = new IntByReference();
